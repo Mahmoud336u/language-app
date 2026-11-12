@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.wrangler/
+.vitest/
+.env
+.env.*
+.dev.vars
+.dev.vars.*
+*.tsbuildinfo
+.npm-cache/
