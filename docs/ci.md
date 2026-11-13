@@ -12,15 +12,61 @@ fixtures, and local assets. No paid service is required.
 base SHA**, fetches PR Git objects without checking them out, verifies the exact
 head SHA, and runs the base-owned standalone checker with Node. No npm install,
 PR dependencies, PR actions, test execution, cache restore, or PR artifacts enter
-this job. A temporary askpass helper supplies the read-only GitHub token only to
-fetch; the subsequent inspection step has no token variable. Git hooks, external
+this job. A temporary askpass helper supplies the read-only GitHub token to fetch.
+The subsequent base-owned approval wrapper uses the automatic token only for GET
+requests to PR metadata and conversation comments. It has `contents: read` and
+`pull-requests: read`, no repository secrets or write permissions. Git hooks, external
 diff/textconv, and replacement objects are disabled by the checker.
 
 The checker examines every reachable commit and each merge-parent delta since the
 merge base. Contracts and shared support freeze at first commit. It catches changes
 even if restored later. It reports Tier 2 revisions with their trusted owner-approved
 decision ID and requires dedicated revision commits. Test deletion and governance
-changes fail closed. It has no bypass or approval flag.
+changes remain in the raw findings. The raw checker has no bypass or approval flag.
+The wrapper can acknowledge governance-only findings with exact authenticated owner
+evidence; all other violation codes remain blocking. It never changes raw results.
+
+## Reviewing and authorizing a protected change
+
+1. Review the PR's full diff and historical findings. A second person can review
+   the code; only the owner identified in trusted `AGENTS.md` can authorize the
+   governance exception. Confirm all ordinary quality checks pass.
+2. Open the current `Trusted test integrity / test-integrity` run. If it reports
+   `approval-required`, copy its complete fingerprint and review the listed paths
+   and commits. The fingerprint changes with PR, base/head, owner, or findings.
+3. The owner personally posts a **new PR conversation comment**, with exactly two
+   lines (replace both placeholders):
+
+   ```text
+   /integrity-approve <64-character fingerprint from the current run>
+   Reason: <why these exact protected changes are accepted>
+   ```
+
+4. On that Actions run, use **Re-run failed jobs**. Approval does not automatically
+   trigger a workflow; an ordinary **Approve** review is not sufficient. The new
+   run fetches current authenticated comments rather than trusting stored files,
+   trailers, PR text, labels, or an agent's assertion of approval.
+5. Confirm `owner-approved`, the actual owner comment URL/ID, matching fingerprint,
+   unchanged raw governance findings, and successful ordinary checks before merge.
+   Preserve RED/GREEN commits with a merge commit.
+
+Only the latest owner integrity-command comment counts. It must be unedited and
+match the exact fingerprint. A new `/integrity-revoke <fingerprint>` comment revokes
+authorization when the check is rerun. A fresh approval comment can supersede it.
+Edits, deletion, and revocation after a completed check do not retroactively change
+its status: rerun and inspect the timeline before merge. Do not edit/delete approval
+records as a replacement for an explicit revocation.
+
+The client uses a fixed GitHub API origin, GET-only endpoints, rejects redirects,
+limits each response to 1 MiB, applies a 15-second request timeout, and reads at most
+20 pages of 100 comments (a full last page fails closed). It checks PR identity,
+open state, and base/head before and after loading evidence. API failure cannot
+produce a passing result. The gate's 10-minute job timeout remains in effect.
+
+`npm run check:test-integrity` remains a raw local audit and still fails on protected
+changes, including approved ones. That behavior is intentional and its frozen tests
+are unchanged. The workflow prints both `inspection` and `decision` so a passing
+owner-authorized gate never conceals its underlying findings.
 
 ## Initial bootstrap and protected changes
 
@@ -37,9 +83,19 @@ automatically authorized by code. The owner's recorded approval and merge are th
 bootstrap trust decision. Do not weaken the checker to obtain a green bootstrap.
 
 Subsequent protected changes need an exact owner-reviewed request, paths/diff,
-approval reference, PR/head SHA, and reason. The owner controls any scoped ruleset
-bypass. `Test-Change-Approved: PR #n` is an audit pointer, never an executable waiver.
-All ordinary quality gates must still pass.
+approval reference, PR/head SHA, and reason. Governance-only changes can use the
+protocol above once the wrapper is in the trusted base. The installation PR is
+still judged by the old base-owned checker and will remain red for protected
+changes. The owner controls any scoped ruleset exception for that installation;
+the agent cannot authorize or merge it. `Test-Change-Approved: PR #n` is an audit
+pointer, never an executable waiver. All ordinary quality gates must still pass.
+
+After installation, test a fresh governance-only PR without approval, with valid
+approval and a rerun, and after a new head commit. Also test a frozen-test tamper PR
+and verify that approval never clears it. Do not merge the tamper PR. An old run
+rerun retains its original workflow/base code: trigger a fresh event using current
+base metadata after installation. Base retargeting is covered by `edited`; feature
+branches must incorporate updated main with merge commits, not rebase frozen history.
 
 ## Owner setup checklist — not configured by this agent
 
