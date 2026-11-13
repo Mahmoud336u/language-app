@@ -19,7 +19,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "preview:cloudflare": "wrangler dev --local --ip 127.0.0.1 --port 8788",
-    "test:deployment": "npm run build && playwright test --config playwright.deployment.config.ts"
+    "test:deployment": "npm run build && playwright test --config playwright.deployment.config.ts",
+    "test:mutation": "stryker run scripts/stryker.config.json"
   },
   "dependencies": {
     "react": "19.3.1",
@@ -30,6 +31,8 @@
     "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.65.0",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
     "@tailwindcss/vite": "4.3.5",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.10",

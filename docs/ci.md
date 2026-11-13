@@ -107,7 +107,7 @@ branches must incorporate updated main with merge commits, not rebase frozen his
 3. In Settings → Rules → Rulesets (or branch protection), require PRs into `main`,
    block force-push/deletion, and require current successful checks. Select actual
    emitted contexts: `lint`, `typecheck`, `test:run`, `test:e2e`, `build`,
-   `integrity-contracts`, `deployment-compatibility`, and, after bootstrap,
+   `integrity-contracts`, `deployment-compatibility`, `mutation` for M1 domain work, and, after bootstrap,
    `test-integrity`. Bind expected status sources where supported.
 4. Protect active feature branches containing RED commits against force-push and
    deletion until history is retained on main. Disable squash/rebase merging;
@@ -135,3 +135,9 @@ shallow/unavailable history, oversized source, and inspection resource limits.
 Candidate workflows can be changed in a PR, but the trusted integrity job rejects
 those changes and never uses them to judge itself. Required check names alone are
 not a security boundary without branch rules and restricted coding credentials.
+
+The M1 `mutation` job uses the same read-only/pinned setup and uploads JSON/HTML
+reports for 14 days. It mutates all domain TypeScript and does not relax the full
+test suite. Its score must be accompanied by a review of surviving mutants. Adding
+it as a required context is an owner-managed repository setting, not established
+merely by committing the workflow.

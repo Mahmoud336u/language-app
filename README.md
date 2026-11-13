@@ -3,8 +3,9 @@
 Learn at your pace. Return whenever you're ready.
 
 An accessible, low-pressure language-learning platform for adults. This repository
-currently contains **M0 engineering foundations only**: a neutral component harness,
-test tooling, a history-aware integrity checker, and CI configuration. No courses,
+currently contains **M0 foundations and the first M1 domain slice**: a neutral
+component harness, a tested German typed-answer matcher, a history-aware integrity
+checker, and CI configuration. The matcher is not yet wired into a learning UI. No courses,
 learning progress, accounts, persistence, or adaptive scheduling are available yet.
 
 ## Development
@@ -32,6 +33,7 @@ npm run build
 npm run test:e2e
 npm run test:integrity
 npm run test:deployment
+npm run test:mutation
 ```
 
 The browser suite uses the production build, so build before running it. The
@@ -47,7 +49,8 @@ base-owned GitHub check, which cannot exist until the owner merges the bootstrap
 ## Engineering references
 
 - [Hard rules](AGENTS.md) and [engineering policy](docs/tdd-policy.md)
-- [Product decisions](docs/product-decisions.md) — D-01–D-11 remain PROPOSED
+- [Product decisions](docs/product-decisions.md) — D-03/D-04 approved; D-05/D-15 approved for direction/scope only
+- [German answer matching](docs/answer-matching.md)
 - [Architecture](docs/architecture.md)
 - [Testing and TDD evidence](docs/testing.md)
 - [CI, trust bootstrap, and owner setup](docs/ci.md)
@@ -57,6 +60,7 @@ base-owned GitHub check, which cannot exist until the owner merges the bootstrap
 - [M0 architecture review](docs/reviews/m0-architecture-review.md)
 - [Owner authorization](docs/reviews/m0-owner-authorization.md)
 - [M0 verification report](docs/reviews/m0-completion-report.md)
+- [First M1 slice report](docs/reviews/m1-matcher-completion-report.md)
 
 The GitHub repository remains `Mahmoud336u/language-app` by owner instruction. The
 application/package is named `unpause-languages`. MIT license; see [LICENSE](LICENSE).
