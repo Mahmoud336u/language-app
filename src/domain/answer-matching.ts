@@ -18,9 +18,11 @@ export type AnswerMatchResult =
 
 function normalizeAnswer(value: unknown): string | undefined {
   if (typeof value !== 'string' || value.length > 1000) return undefined;
-  // Remove only the permitted control whitespace before rejecting controls,
-  // formatting marks and unpaired UTF-16 surrogates. Valid surrogate pairs survive.
-  if (/[\p{Cc}\p{Cf}\p{Cs}]/u.test(value.replace(/[\t\r\n]/g, ''))) return undefined;
+  // Validate raw surrogate pairing before any replacement could join broken units.
+  if (/\p{Cs}/u.test(value)) return undefined;
+  // Only these control characters are permitted whitespace. All other controls
+  // and formatting marks remain invalid, including otherwise invisible characters.
+  if (/[\p{Cc}\p{Cf}]/u.test(value.replace(/[\t\r\n]/g, ''))) return undefined;
   const normalized = value.normalize('NFC').replace(/[ \t\r\n\u00a0]+/g, ' ').replace(/^ | $/g, '');
   return normalized.length === 0 ? undefined : normalized;
 }
