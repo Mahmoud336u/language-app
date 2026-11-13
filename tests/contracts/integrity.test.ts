@@ -1,4 +1,5 @@
 // @vitest-environment node
+// M0 enforcement probe: intentional frozen-file edit; never merge.
 import { afterEach, describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { spawnSync } from 'node:child_process';
