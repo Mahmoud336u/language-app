@@ -20,7 +20,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "preview:cloudflare": "wrangler dev --local --ip 127.0.0.1 --port 8788",
     "test:deployment": "npm run build && playwright test --config playwright.deployment.config.ts",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run scripts/stryker.config.json"
   },
   "dependencies": {
     "react": "19.3.1",

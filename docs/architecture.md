@@ -43,6 +43,13 @@ These data-model recommendations still require approved product contracts.
 
 ## Deferred decisions and limits
 
+The first approved M1 slice adds `src/domain/answer-matching.ts`, a pure typed-answer
+matcher with validated inputs, directional transliteration, strict flags, and
+feedback data. It has no UI, time, persistence, or scheduling dependencies. The
+owner-approved D-03/D-04 contract and [module documentation](answer-matching.md)
+define its boundary. D-05 preservation and D-15 A1 pilot approval settle direction
+only; their implementation remains outside this slice.
+
 IndexedDB is the recommended persistence technology, with transactions, versioned
 migrations, idempotency, and explicit export/import. It is not implemented or
 approved under D-10. Browser eviction, deletion, and origin changes cannot be solved

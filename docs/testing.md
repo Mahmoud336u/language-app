@@ -12,6 +12,7 @@ checks; no empty suite or skipped assertion counts as a pass.
 | `npm run build` | TypeScript and Vite static production assets |
 | `npm run test:e2e` | Built UI in desktop and 360px mobile Chromium |
 | `npm run test:deployment` | Build plus local Cloudflare static routing and response headers |
+| `npm run test:mutation` | Stryker on all domain TypeScript, with related contract tests and JSON/HTML reports |
 | `npm run check:test-integrity` | Committed branch history against `origin/main`; protected changes fail closed |
 
 Build before `test:e2e`. Playwright owns each test server and does not reuse an
@@ -53,7 +54,13 @@ The browser suite checks keyboard interaction, programmatic errors, visible focu
 reduced motion, text reflow, and axe WCAG A/AA findings in two states. It does not
 replace manual screen-reader testing or a full product accessibility review.
 Cloudflare checks use local Wrangler, not a production account or deployment.
-Mutation testing starts with M1 domain work. No domain code exists during M0.
+Mutation testing now covers the approved M1 answer matcher. Run `npm run
+test:mutation`; review `reports/mutation/mutation.json` and the HTML report. The
+configuration is under protected `scripts/`; no mutators or source branches are
+excluded. The normal full regression run remains required. Stryker's score alone
+does not prove adequate coverage: add new contract files for meaningful survivors,
+and document evidence for any behaviorally equivalent mutants. Never edit frozen
+tests or add exclusions to obtain a better score.
 
 The candidate tamper suite and the branch audit are different checks. During
 bootstrap, the audit correctly rejects protected governance/configuration changes;
