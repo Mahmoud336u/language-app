@@ -19,15 +19,13 @@ export interface GateReport {
   decision: ApprovalDecision;
 }
 
-export async function runTrustedGate(options: TrustedGateOptions, readJson: ReadGitHubJson): Promise<GateReport> {
-  if (!/^[a-f0-9]{40}$/.test(options.base) || !/^[a-f0-9]{40}$/.test(options.head)) {
-    throw new Error('Exact base and head commit SHAs are required.');
-  }
+// Read only the trusted Git blob; working-tree AGENTS may belong to the candidate.
+function readTrustedOwner(repo: string, base: string): string {
   const ownerSource = spawnSync('git', [
     '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false',
-    'cat-file', 'blob', `${options.base}:AGENTS.md`
+    'cat-file', 'blob', `${base}:AGENTS.md`
   ], {
-    cwd: resolve(options.repo), encoding: 'utf8', timeout: 10_000, maxBuffer: 1024 * 1024,
+    cwd: resolve(repo), encoding: 'utf8', timeout: 10_000, maxBuffer: 1024 * 1024,
     env: { PATH: process.env.PATH ?? '/usr/bin:/bin', LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8',
       GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null', GIT_NO_REPLACE_OBJECTS: '1',
       GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0' }
@@ -36,6 +34,14 @@ export async function runTrustedGate(options: TrustedGateOptions, readJson: Read
   const owners = [...ownerSource.stdout.matchAll(/^Repository owner: @([\w-]+)\s*$/gm)];
   const owner = owners[0]?.[1];
   if (owners.length !== 1 || !owner) throw new Error('Trusted base must identify exactly one repository owner.');
+  return owner;
+}
+
+export async function runTrustedGate(options: TrustedGateOptions, readJson: ReadGitHubJson): Promise<GateReport> {
+  if (!/^[a-f0-9]{40}$/.test(options.base) || !/^[a-f0-9]{40}$/.test(options.head)) {
+    throw new Error('Exact base and head commit SHAs are required.');
+  }
+  const owner = readTrustedOwner(options.repo, options.base);
   const inspection = inspectRepository(options);
   const decision = await verifyGitHubApproval({ ...options, owner }, inspection, readJson);
   return { inspection, decision };
