@@ -22,7 +22,7 @@ interface TreeEntry { mode: string; type: string; oid: string }
 interface Change { status: string; path: string }
 
 const isFrozen = (path: string) => /^(tests\/(contracts|support|helpers|fixtures)\/|tests\/setup\.[cm]?[jt]sx?$)/.test(path);
-const isTier2 = (path: string) => /^tests\/(ui|e2e|visual|accessibility)\//.test(path) || /(^|\/)(__snapshots__|__screenshots__)\//.test(path) || path.endsWith('.snap');
+const isTier2 = (path: string) => /^tests\/(ui|e2e|deployment|visual|accessibility)\//.test(path) || /(^|\/)(__snapshots__|__screenshots__)\//.test(path) || path.endsWith('.snap');
 const isTest = (path: string) => path.startsWith('tests/') || /\.(test|spec)\.[cm]?[jt]sx?$/.test(path);
 const isSource = (path: string) => /\.[cm]?[jt]sx?$/.test(path);
 const isGovernance = (path: string) =>
