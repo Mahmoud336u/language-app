@@ -38,7 +38,7 @@ export function SamplePreview() {
           onChange={(event) => { setSample(event.target.value); setInvalid(false); }}
         />
         {invalid && <p id="sample-error" className="error" role="alert">Enter sample text to preview.</p>}
-        <button type="submit">Preview sample <span aria-hidden="true">↗</span></button>
+        <button type="submit">Preview sample <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 12 12 4M4 4h8v8" stroke="currentColor" strokeWidth="1.5" /></svg></button>
       </form>
       <div className="sample-output"><span className="eyebrow">Your preview</span><p role="status" aria-live="polite">{preview}</p></div>
     </section>
