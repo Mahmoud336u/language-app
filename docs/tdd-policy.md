@@ -253,7 +253,7 @@ The owner authorized G-01–G-06 from `docs/reviews/m0-architecture-review.md` i
 
 **Protected enforcement surface.** Owner review is required for changes to AGENTS.md, this policy, product-decisions.md, `.github/**`, all scripts, package manifests and lockfiles, npm configuration, test/lint/TypeScript/Vite/Playwright/Cloudflare configurations, and the checker's own test/support files. Conservative rejection is preferable to pretending to prove semantic safety. New contract files are allowed but become frozen immediately. Enforcement checks test source for skip/focus/disable patterns; novel dynamic JavaScript still needs human review.
 
-**Trusted inspection.** `test-integrity` uses `pull_request_target` and only checker code from the trusted base. It may fetch objects and read validated commit metadata, trees, and blobs using Git. It never checks out PR files, installs PR dependencies, invokes PR actions, runs PR tests, executes hooks, applies filters, invokes external diff drivers, or consumes PR artifacts/caches. Disable hooks, external diff, text conversion, and replacement objects; pass refs/paths as arguments, not shell interpolation. Use read-only permissions and no secrets. Application checks run separately under `pull_request`.
+**Trusted inspection.** `test-integrity` uses `pull_request_target` and only checker/gate code from the trusted base. It may fetch objects and read validated commit metadata, trees, and blobs using Git. The approval wrapper may additionally read current PR metadata and conversation comments through GitHub's API using the read-only automatic GitHub token (`contents: read`, `pull-requests: read`). It never checks out PR files, installs PR dependencies, invokes PR actions, runs PR tests, executes hooks, applies filters, invokes external diff drivers, or consumes PR artifacts/caches. Disable hooks, external diff, text conversion, and replacement objects; pass refs/paths as arguments, not shell interpolation. No repository secrets, write permissions, or external services are introduced. Application checks run separately under `pull_request`.
 
 **Preserve history.** Disable squash/rebase merges. Block force-push and deletion on `main` and active feature branches with RED commits. Preserve test-first history through merge commits. A checker cannot reconstruct history erased before it observes it; branch rules and owner review are essential.
 
@@ -261,7 +261,35 @@ The owner authorized G-01–G-06 from `docs/reviews/m0-architecture-review.md` i
 
 **Initial trust bootstrap.** Current main has no checker or workflow. The owner must review and merge the first foundation PR after actual quality and tamper-suite results. Its candidate checker is not trusted authority over its own installation. The first PR does not have a functioning base-owned `test-integrity` check; after merge the owner makes that check required and verifies a subsequent PR. A separate `integrity-contracts` check exercises candidate enforcement without pretending to be the trusted check.
 
-**Owner-only exceptions.** A rejected protected change requires the exact §4 request (or exact governance change approval), PR/head, affected paths/diff, reason, and owner approval. The owner may use a narrowly scoped administrative bypass; record `Test-Change-Approved: PR #<n>` as an audit pointer. The checker has no approval/bypass flag. A trailer cannot turn it green, and administrative bypass never substitutes for real passing lint, types, tests, or build.
+**Owner-only exceptions.** A rejected protected change requires the exact §4 request (or exact governance change approval), PR/head, affected paths/diff, reason, and owner approval. The raw checker has no approval/bypass flag and continues to report all findings. A separate trusted wrapper may acknowledge governance-only findings using the protocol below. It cannot acknowledge frozen-test changes, deletions, bypasses, Tier 2 failures, unavailable history, or unknown violation codes. Those still require the existing explicit owner procedure. A trailer never authorizes a change.
+
+**Governance acknowledgment protocol.** The owner from trusted-base `AGENTS.md`
+must personally post a new, unedited PR conversation comment with exactly
+`/integrity-approve <fingerprint>` and a nonempty `Reason: ...` on the next line.
+The SHA-256 fingerprint binds version, repository, PR number, owner, base SHA, head
+SHA, and the sorted complete governance findings (code, path, commit). Only the
+latest owner integrity-command comment counts. Wrong, malformed, edited, stale,
+or revoked commands fail closed. `/integrity-revoke <fingerprint>` withdraws the
+acknowledgment on the next run. The wrapper obtains authorship from GitHub, reads
+all bounded comment pages, rechecks current PR/base/head around evidence loading,
+and records the comment ID/URL, reason, fingerprint, and original findings. API
+errors or inspection limits fail closed. Bots and agent-written evidence do not
+authorize exceptions; the coding identity must remain distinct from the owner.
+
+An ordinary PR review approval does not trigger or satisfy this protocol. The
+owner/reviewer reruns the trusted check after the comment. Completed checks are
+snapshots: later edits, deletion, or revocation do not retroactively invalidate
+them. Rerun and inspect the approval timeline before merging; prefer a new revoke
+command over editing/deleting evidence. No status/check-writing permission or
+comment-triggered workflow is introduced.
+
+**Gate installation.** A gate cannot authorize its own installation or upgrade
+using candidate code. The owner may use the existing narrowly scoped administrative
+exception after reviewing the exact PR/head/diff and real quality results; record
+`Test-Change-Approved: PR #<n>` as an audit pointer. Never disable the required check
+globally. The owner controls this exception and merge; an agent must not perform
+them. Ordinary quality gates still have to pass. Verify the new gate on fresh
+events after its code enters the trusted base; old-run reruns retain old code.
 
 **Owner-managed GitHub settings.** Protect main with PRs and required `lint`, `typecheck`, `test:run`, `test:e2e`, `build`, `test-integrity`, plus the approved `integrity-contracts` and `deployment-compatibility` checks. Confirm private-repository plan support. The coding identity must be separate, non-admin, with contents/PR writes only and no bypass/status-forging authority. Bind status sources where supported. CODEOWNERS lists governance and enforcement paths; require reviews only with a separate eligible owner reviewer. Never rely on bot self-approval. See `docs/ci.md` for the manual checklist and limitations.
 
