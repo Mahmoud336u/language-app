@@ -55,4 +55,26 @@ jobs:
       - name: Inspect with trusted code; never install or execute PR dependencies
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/run-test-integrity.ts
+        shell: bash
+        run: |
+          set +e
+          node scripts/run-test-integrity.ts 2>&1 | tee integrity-report.log
+          status=${PIPESTATUS[0]}
+          {
+            echo '## Trusted test integrity'
+            echo
+            echo 'Open this current run output to review the exact findings and fingerprint.'
+            echo
+            echo '```text'
+            cat integrity-report.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - name: Preserve current test-integrity log
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: test-integrity-log
+          path: integrity-report.log
+          if-no-files-found: error
+          retention-days: 14
