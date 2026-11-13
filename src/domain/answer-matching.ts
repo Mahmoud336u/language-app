@@ -47,44 +47,60 @@ function matchesTransliteration(expected: string, input: string, strictEszett: b
   return positions.has(input.length);
 }
 
-/** Pure D-03/D-04 boundary. It returns feedback data and never records an attempt. */
-export function matchGermanAnswer(exercise: unknown, answer: unknown): AnswerMatchResult {
-  if (typeof exercise !== 'object' || exercise === null || Array.isArray(exercise)) return { status: 'invalid-exercise' };
+interface ValidatedDefinition {
+  answers: string[];
+  strictEszett: boolean;
+  testsCapitalization: boolean;
+}
+
+function validateDefinition(exercise: unknown): ValidatedDefinition | undefined {
+  if (typeof exercise !== 'object' || exercise === null || Array.isArray(exercise)) return undefined;
   const definition = exercise as Record<string, unknown>;
   if ((definition.strictEszett !== undefined && typeof definition.strictEszett !== 'boolean')
     || (definition.testsCapitalization !== undefined && typeof definition.testsCapitalization !== 'boolean')) {
-    return { status: 'invalid-exercise' };
+    return undefined;
   }
   if (definition.acceptedVariants !== undefined
     && (!Array.isArray(definition.acceptedVariants) || definition.acceptedVariants.length > 20)) {
-    return { status: 'invalid-exercise' };
+    return undefined;
   }
   const accepted: string[] = [];
   const variants: unknown[] = definition.acceptedVariants === undefined ? [] : definition.acceptedVariants as unknown[];
   for (const raw of [definition.answer, ...variants]) {
     const normalized = normalizeAnswer(raw);
-    if (normalized === undefined) return { status: 'invalid-exercise' };
+    if (normalized === undefined) return undefined;
     accepted.push(normalized);
   }
+  return { answers: accepted, strictEszett: definition.strictEszett === true, testsCapitalization: definition.testsCapitalization === true };
+}
+
+function correct(matchedAnswerIndex: number, transliterationUsed: boolean, caseDifference: boolean): AnswerMatchResult {
+  return { status: 'correct', matchedAnswerIndex, transliterationUsed, caseDifference };
+}
+
+/** Pure D-03/D-04 boundary. It returns feedback data and never records an attempt. */
+export function matchGermanAnswer(exercise: unknown, answer: unknown): AnswerMatchResult {
+  const definition = validateDefinition(exercise);
+  if (definition === undefined) return { status: 'invalid-exercise' };
   const input = normalizeAnswer(answer);
   if (input === undefined) return { status: 'invalid-input' };
-  for (const [index, expected] of accepted.entries()) {
-    if (input === expected) return { status: 'correct', matchedAnswerIndex: index, transliterationUsed: false, caseDifference: false };
-  }
-  if (definition.testsCapitalization !== true) {
-    for (const [index, expected] of accepted.entries()) {
-      if (input.toLocaleLowerCase('de-DE') === expected.toLocaleLowerCase('de-DE')) {
-        return { status: 'correct', matchedAnswerIndex: index, transliterationUsed: false, caseDifference: true };
+  const exactIndex = definition.answers.indexOf(input);
+  if (exactIndex !== -1) return correct(exactIndex, false, false);
+  const foldedInput = input.toLocaleLowerCase('de-DE');
+  if (!definition.testsCapitalization) {
+    for (const [index, expected] of definition.answers.entries()) {
+      if (foldedInput === expected.toLocaleLowerCase('de-DE')) {
+        return correct(index, false, true);
       }
     }
   }
-  for (const [index, expected] of accepted.entries()) {
-    if (matchesTransliteration(expected, input, definition.strictEszett === true)) {
-      return { status: 'correct', matchedAnswerIndex: index, transliterationUsed: true, caseDifference: false };
+  for (const [index, expected] of definition.answers.entries()) {
+    if (matchesTransliteration(expected, input, definition.strictEszett)) {
+      return correct(index, true, false);
     }
-    if (definition.testsCapitalization !== true
-      && matchesTransliteration(expected.toLocaleLowerCase('de-DE'), input.toLocaleLowerCase('de-DE'), definition.strictEszett === true)) {
-      return { status: 'correct', matchedAnswerIndex: index, transliterationUsed: true, caseDifference: true };
+    if (!definition.testsCapitalization
+      && matchesTransliteration(expected.toLocaleLowerCase('de-DE'), foldedInput, definition.strictEszett)) {
+      return correct(index, true, true);
     }
   }
   return { status: 'incorrect' };
