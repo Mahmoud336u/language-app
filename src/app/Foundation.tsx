@@ -1,23 +1,7 @@
-import { useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import { SamplePreview } from '../ui/SamplePreview';
 
 export function Foundation() {
-  const [sample, setSample] = useState('');
-  const [preview, setPreview] = useState('Your sample will appear here.');
-  const [invalid, setInvalid] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
   const knownRoute = ['/', '/foundation', '/foundation/'].includes(window.location.pathname);
-
-  function previewSample(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!sample.trim()) {
-      setInvalid(true);
-      input.current?.focus();
-      return;
-    }
-    setInvalid(false);
-    setPreview(sample.trim());
-  }
 
   return (
     <>
@@ -36,29 +20,7 @@ export function Foundation() {
               <p className="availability">No courses are available in this foundation build.</p>
             </section>
             <div className="foundation-grid">
-              <section className="sample-card" aria-labelledby="sample-title">
-                <p className="eyebrow">01 / Controls &amp; feedback</p>
-                <h2 id="sample-title">A little room to try things.</h2>
-                <p className="section-copy">Try the controls with a keyboard or touch. This sample stays on the page and isn’t saved.</p>
-                <form onSubmit={previewSample} noValidate>
-                  <label htmlFor="sample">Sample text</label>
-                  <p id="sample-hint" className="field-hint">Write a short phrase of your own.</p>
-                  <input
-                    id="sample"
-                    ref={input}
-                    type="text"
-                    value={sample}
-                    maxLength={200}
-                    autoComplete="off"
-                    aria-invalid={invalid}
-                    aria-describedby={invalid ? 'sample-hint sample-error' : 'sample-hint'}
-                    onChange={(event) => { setSample(event.target.value); setInvalid(false); }}
-                  />
-                  {invalid && <p id="sample-error" className="error" role="alert">Enter sample text to preview.</p>}
-                  <button type="submit">Preview sample <span aria-hidden="true">↗</span></button>
-                </form>
-                <div className="sample-output"><span className="eyebrow">Your preview</span><p role="status" aria-live="polite">{preview}</p></div>
-              </section>
+              <SamplePreview />
               <aside className="design-note" aria-labelledby="design-title">
                 <div className="paper-illustration" aria-hidden="true"><span className="paper-line" /><span className="paper-line" /><span className="paper-line short" /><span className="paper-dot" /></div>
                 <p className="eyebrow">02 / Visual foundations</p>
