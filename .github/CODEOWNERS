@@ -1,0 +1,14 @@
+# Requires a separate eligible reviewer to enforce approvals. See docs/ci.md.
+/AGENTS.md @Mahmoud336u
+/docs/tdd-policy.md @Mahmoud336u
+/docs/product-decisions.md @Mahmoud336u
+/docs/reviews/ @Mahmoud336u
+/.github/ @Mahmoud336u
+/scripts/ @Mahmoud336u
+/tests/ @Mahmoud336u
+/package.json @Mahmoud336u
+/package-lock.json @Mahmoud336u
+/.npmrc @Mahmoud336u
+/.nvmrc @Mahmoud336u
+/*config* @Mahmoud336u
+/wrangler.jsonc @Mahmoud336u
