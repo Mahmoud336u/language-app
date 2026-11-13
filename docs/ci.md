@@ -31,9 +31,11 @@ evidence; all other violation codes remain blocking. It never changes raw result
 1. Review the PR's full diff and historical findings. A second person can review
    the code; only the owner identified in trusted `AGENTS.md` can authorize the
    governance exception. Confirm all ordinary quality checks pass.
-2. Open the current `Trusted test integrity / test-integrity` run. If it reports
-   `approval-required`, copy its complete fingerprint and review the listed paths
-   and commits. The fingerprint changes with PR, base/head, owner, or findings.
+2. Open the current `Trusted test integrity / test-integrity` run and its
+   `test-integrity-log` artifact (the job summary also includes the complete
+   output). If it reports `approval-required`, copy its complete fingerprint and
+   review the listed paths and commits. The fingerprint changes with PR, base/head,
+   owner, or findings.
 3. The owner personally posts a **new PR conversation comment**, with exactly two
    lines (replace both placeholders):
 
