@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 import config from './playwright.config';
 
 export default defineConfig(config, {
-  testDir: './tests/e2e',
+  testDir: './tests/deployment',
   testMatch: 'deployment.spec.ts',
   use: { baseURL: 'http://127.0.0.1:8788' },
   webServer: {
