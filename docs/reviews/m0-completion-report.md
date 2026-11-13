@@ -2,10 +2,11 @@
 
 Date: 2026-11-13. Repository: `Mahmoud336u/language-app`.
 Branch: `m0/engineering-foundations`. Application: **Unpause Languages**.
+Pull request: [#1](https://github.com/Mahmoud336u/language-app/pull/1), draft.
 
 **Status: implementation ready for owner review; M0 exit criteria are not yet fully
-verified.** Local application and tamper-suite checks pass. GitHub execution and
-owner-managed enforcement are tracked separately below. Nothing has been deployed.
+verified.** Local application and tamper-suite checks pass, as do all seven GitHub
+quality jobs. Owner-managed enforcement remains outstanding. Nothing has been deployed.
 
 ## Architecture and authorization
 
@@ -108,8 +109,18 @@ suite proves the tested failure mechanisms; it is not trusted approval of this P
 The original main has no checker/workflow, so a base-owned `test-integrity` result
 cannot exist for this initial installation. The owner must review and merge it.
 
-GitHub Actions execution: **not yet verified** at report creation. Required-check
-settings, branch protection, private-plan support, and a separate non-admin coding
+GitHub Actions execution: **PASSED** for implementation commit
+`1066fb41c6173ace484b23a1b25e5e26a60aac90` in
+[Quality gates run 43347686525](https://github.com/Mahmoud336u/language-app/actions/runs/43347686525).
+All seven jobs completed successfully: `lint`, `typecheck`, `test:run`, `build`,
+`integrity-contracts`, `test:e2e`, and `deployment-compatibility`. This verifies the
+clean GitHub runner and pinned Playwright browser as well as the local environment.
+It does not verify a base-owned `test-integrity` job, which has not run at bootstrap.
+The candidate history audit at that implementation commit inspected 12 commits,
+reported 25 `GOVERNANCE_CHANGE` findings, and reported no frozen-test, deletion,
+bypass, or Tier 2 revision findings. This report update changes documentation only.
+
+Required-check settings, branch protection, private-plan support, and a separate non-admin coding
 identity are **unverified/not configured by this agent**. Connector metadata exposed
 admin capability; a local Codex commit author does not create role separation.
 
