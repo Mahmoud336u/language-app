@@ -1,0 +1,132 @@
+<section id="unpause-mvp-map" aria-label="Unpause Languages roadmap and decision scenarios">
+<style>
+#unpause-mvp-map { color:var(--foreground); }
+#unpause-mvp-map .block { margin-top:calc(var(--font-size-base) * 1.3); }
+#unpause-mvp-map .title-group { display:grid; gap:calc(var(--font-size-base) * .35); padding-right:90px; }
+#unpause-mvp-map .road { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:calc(var(--font-size-base) * .65); }
+#unpause-mvp-map .road li { display:grid; gap:calc(var(--font-size-base) * .45); align-content:start; min-width:0; }
+#unpause-mvp-map .road .track { height:4px; background:var(--border); }
+#unpause-mvp-map .road .finished { background:var(--viz-series-2); }
+#unpause-mvp-map .road .current { background:var(--viz-series-1); }
+#unpause-mvp-map .road-label { overflow-wrap:anywhere; }
+#unpause-mvp-map .flow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(var(--font-size-base) * 1.3); }
+#unpause-mvp-map .flow.four { grid-template-columns:repeat(4,minmax(0,1fr)); }
+#unpause-mvp-map .node { position:relative; display:grid; align-content:start; gap:calc(var(--font-size-base) * .55); min-width:0; padding-top:calc(var(--font-size-base) * .7); border-top:2px solid var(--border); }
+#unpause-mvp-map .node:not(:last-child)::after { content:'→'; position:absolute; right:calc(var(--font-size-base) * -1); top:calc(var(--font-size-base) * .45); color:var(--muted-foreground); }
+#unpause-mvp-map .node-title { font-weight:500; }
+#unpause-mvp-map .node ul { padding-left:calc(var(--font-size-base) * 1.15); margin:0; display:grid; gap:calc(var(--font-size-base) * .4); }
+#unpause-mvp-map .legend { display:flex; flex-wrap:wrap; gap:calc(var(--font-size-base) * 1); }
+#unpause-mvp-map .dot { display:inline-block; width:8px; height:8px; margin-right:5px; background:var(--border); border-radius:50%; }
+#unpause-mvp-map .dot.done { background:var(--viz-series-2); }
+#unpause-mvp-map .dot.now { background:var(--viz-series-1); }
+#unpause-mvp-map .gate { border-left:3px solid var(--border); padding-left:calc(var(--font-size-base) * .8); }
+#unpause-mvp-map .cycle { display:flex; flex-wrap:wrap; align-items:center; gap:calc(var(--font-size-base) * .5); }
+#unpause-mvp-map [hidden] { display:none; }
+@media(max-width:600px) {
+ #unpause-mvp-map .road { grid-template-columns:repeat(4,minmax(0,1fr)); }
+ #unpause-mvp-map .flow, #unpause-mvp-map .flow.four { grid-template-columns:1fr; gap:calc(var(--font-size-base) * 1.3); }
+ #unpause-mvp-map .node:not(:last-child)::after { content:'↓'; right:0; top:auto; bottom:calc(var(--font-size-base) * -1.1); }
+}
+@media(max-width:400px) {
+ #unpause-mvp-map .road { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #unpause-mvp-map .title-group { padding-right:0; }
+}
+</style>
+<div class="title-group">
+<h2>Unpause Languages · path to MVP</h2>
+<div class="text-small text-muted">Planning snapshot · 14 November 2026 · stages are not equal units of effort</div>
+</div>
+<ol class="road block" aria-label="Milestones in delivery order">
+<li><span class="track finished"></span><button type="button" class="btn" data-stage="m0" aria-pressed="false">M0</button><span class="road-label text-small">Foundations<br>Closure merged</span></li>
+<li><span class="track current"></span><button type="button" class="btn" data-stage="m1" aria-pressed="true">M1</button><span class="road-label text-small">Domain core<br>In progress</span></li>
+<li><span class="track"></span><button type="button" class="btn" data-stage="m2" aria-pressed="false">M2</button><span class="road-label text-small">Content<br>Planned</span></li>
+<li><span class="track"></span><button type="button" class="btn" data-stage="m3" aria-pressed="false">M3</button><span class="road-label text-small">Learning flow<br>Planned</span></li>
+<li><span class="track"></span><button type="button" class="btn" data-stage="m4" aria-pressed="false">M4</button><span class="road-label text-small">Full journey<br>Planned</span></li>
+<li><span class="track"></span><button type="button" class="btn" data-stage="m5" aria-pressed="false">M5</button><span class="road-label text-small">Pilot validation<br>Planned</span></li>
+<li><span class="track"></span><button type="button" class="btn" data-stage="mvp" aria-pressed="false">MVP</button><span class="road-label text-small">A1 release<br>Gated</span></li>
+</ol>
+<div class="legend text-small block"><span><i class="dot done" aria-hidden="true"></i>Recorded foundation</span><span><i class="dot now" aria-hidden="true"></i>Current milestone</span><span><i class="dot" aria-hidden="true"></i>Future work</span></div>
+<div class="viz-controls block" role="group" aria-label="Explore the plan">
+<button type="button" class="btn" id="unpause-road-mode" aria-pressed="true">Build roadmap</button>
+<button type="button" class="btn" id="unpause-scenario-mode" aria-pressed="false">Decision scenarios</button>
+</div>
+<section id="unpause-road-panel" class="block" aria-label="Selected milestone">
+<div class="viz-row"><h3 id="unpause-stage-title">M1 · session save/resume is next</h3><span class="viz-badge" id="unpause-stage-status">Approval needed</span></div>
+<div class="flow four block" id="unpause-stage-flow" aria-live="polite"></div>
+<div class="gate block" id="unpause-stage-gate"></div>
+</section>
+<section id="unpause-scenario-panel" class="block" aria-label="Decision scenario explorer" hidden>
+<div class="viz-controls">
+<label class="form-label" for="unpause-decision">Decision
+<select class="form-select" id="unpause-decision"><option value="storage">1 · Where answers are saved</option><option value="answers">2 · How submissions count</option><option value="resume">3 · What happens to unfinished work</option></select></label>
+<label class="form-label" for="unpause-scenario">Scenario<select class="form-select" id="unpause-scenario"></select></label>
+</div>
+<div class="viz-row block"><h3 id="unpause-scenario-title"></h3><span class="viz-badge" id="unpause-scenario-status"></span></div>
+<div class="flow block" id="unpause-scenario-flow" aria-live="polite"></div>
+<div class="gate block" id="unpause-scenario-impact"></div>
+</section>
+<hr class="block">
+<div class="text-small text-muted">For every new slice</div>
+<div class="cycle block" aria-label="Required development lifecycle">
+<span>Proposal + review</span><span aria-hidden="true">→</span><span>Owner decision</span><span aria-hidden="true">→</span><span>Approved contract</span><span aria-hidden="true">→</span><span>Failing tests</span><span aria-hidden="true">→</span><span>Implementation</span><span aria-hidden="true">→</span><span>Refactor + checks</span><span aria-hidden="true">→</span><span>Independent review</span>
+</div>
+<div class="text-small text-muted block">Exploration only · selecting a scenario does not approve it or change the repository.</div>
+</section>
+<script>
+(() => {
+const root = document.getElementById('unpause-mvp-map');
+const el = id => root.querySelector('#unpause-' + id);
+const stages = {
+ m0:{title:'M0 · engineering foundations',status:'Closure PR #8 merged',nodes:[['Start',['Product vision','Governance documents']],['Build',['Strict TypeScript + React/Vite','Test tools and CI','Test-integrity enforcement']],['Verify',['Quality checks passed','Clean and rejected-tamper evidence','Protection settings documented']],['Handoff',['M0 closure merged','Links accepted as evidence','Proceed to approved M1 slices']]],gate:'Evidence limit: links do not prove unobserved force-push or deletion attempts.'},
+ m1:{title:'M1 · session save/resume is next',status:'Approval needed',nodes:[['Already built',['German answer matcher','D-03 / D-04 contracts']],['Next: PR #11',['Approve D-05 / D-10 details','Approve architecture + test plan','Save, progress, resume, discard']],['Then implement',['Separate RED / GREEN commits','Real browser storage tests','Conflicts and failure handling']],['Finish domain core',['Approve scheduler + grading','Approve welcome-back behavior','Mutation review + regression gates']]],gate:'Current gate: PR #11 proposes the next slice only. It does not approve scheduling, all M1 work, or release.'},
+ m2:{title:'M2 · trustworthy content and structure',status:'Planned · decisions required',nodes:[['Decide',['Content schema + review rules','A1 pilot curriculum objectives','Visual direction + onboarding rules']],['Build',['Course and lesson relationships','Grammar and vocabulary structure','Validated content authoring']],['Review',['New content starts as draft','Authorized German-language review','Software validation tests']],['Unlock',['Honest course availability','Reviewed A1 pilot material','Course browsing and onboarding']]],gate:'Content gate: only authorized reviewed material may ship. A2–B2 remain roadmap items; lesson count is undecided.'},
+ m3:{title:'M3 · usable learning sessions',status:'Planned · depends on approved domain',nodes:[['Start',['Reviewed exercises','Tested matcher + session storage','Approved scheduling rules']],['Build',['Focused exercise UI','Clear feedback and save status','Safe exit, resume, welcome-back']],['Exercise failures',['Save error: no false success','Tab conflict: reload saved work','Invalid input: no wrong-answer penalty']],['Unlock',['Choose a lesson','Answer and receive feedback','Leave and resume reliably']]],gate:'UI gate: implement only reviewed flows; no punitive streaks, forced timers, or fabricated learning progress.'},
+ m4:{title:'M4 · complete and accessible journey',status:'Planned · release safeguards',nodes:[['Connect',['Homepage → onboarding → course','Lesson → practice → review','Return → resume']],['Finish',['Responsive desktop / mobile','Keyboard, screen-reader, motion checks','Functional navigation and CTAs']],['Protect data',['Approve and build backup/import','Erasure and recovery controls','Validate supported browser storage']],['Verify',['Full Playwright journey','Accessibility and deployment checks','Privacy/security review of actual data flows']]],gate:'Release gate: approve and test recovery safeguards before real learner release. Cloudflare deployment still needs authorization.'},
+ m5:{title:'M5 · validate with learners',status:'Planned · controlled pilot',nodes:[['Prepare',['Approved privacy/measurement rules','Reviewed A1 pilot content','Working and tested journey']],['Observe',['Learners attempt real tasks','Check understanding and return flow','Use actual activity data only']],['Improve',['Fix usability and learning problems','Recheck accessibility and regression','Review evidence against pilot goals']],['Decide',['Owner evaluates pilot results','Resolve material release blockers','Confirm bounded release scope']]],gate:'Pilot gate: define success criteria before evaluation. No invented statistics or claims of clinical effectiveness.'},
+ mvp:{title:'MVP · release the reviewed A1 pilot',status:'Target · not built yet',nodes:[['Learner can',['Discover available A1 lessons','Practice and get feedback','Return without losing saved progress']],['Quality holds',['Reviewed German content','Accessible responsive journey','Real progress and tested persistence']],['Release evidence',['Required checks genuinely pass','Backup/recovery and privacy addressed','Pilot findings reviewed']],['Owner authorizes',['Final release scope','Deployment to approved environment','Monitoring and maintenance plan']]],gate:'Outside the initial scope: A2–B2 content, AI chat, payments, social learning, and mandatory accounts. Future work needs separate review.'}
+};
+const decisions = {
+ storage:[
+  {id:'save',label:'Recommended · successful save',title:'A saved answer survives reload',status:'Proposed in PR #11',steps:[['Before',['3 items; 1 answer saved','Next: item 2']],['Submit',['Answer item 2','Database transaction commits']],['After',['2 answers saved','Reload resumes item 3']]],impact:'M1 builds the storage contract; M3 shows the saved state to the learner.'},
+  {id:'failure',label:'Recommended · save fails',title:'No success until saving succeeds',status:'Proposed in PR #11',steps:[['Before',['1 answer saved','Item 2 is open']],['Failure',['Quota, denial, or transaction abort','Save returns an error']],['After',['Still 1 saved answer','No silent advance','Retry uses the same submission ID']]],impact:'M1 tests failure outcomes; M3 presents pending, saved, and failed states. Unsaved typed text is not guaranteed recoverable.'},
+  {id:'evicted',label:'Limitation · browser data cleared',title:'Local storage has a recovery limit',status:'Pre-release safeguard needed',steps:[['Before',['Progress stored in this browser','No account or cloud copy']],['Loss',['Browser clears or evicts data','Saved records become unavailable']],['Recovery',['No invented restore','Backup/import is later approved work','Restore requires an available backup']]],impact:'Backup/import, recovery controls, and supported-device validation remain required before learner release.'},
+  {id:'corrupt',label:'Recommended · one damaged record',title:'Preserve unreadable data',status:'Proposed in PR #11',steps:[['Before',['Session A is valid','Session B is unreadable']],['Load',['Validate both records','Report B as corrupt or unsupported']],['After',['A remains usable','B is not deleted or reset','No false empty-session success']]],impact:'M1 establishes safe data handling; recovery UI belongs to a later approved slice.'},
+  {id:'memory',label:'Alternative · memory only',title:'Simpler, but no reload recovery',status:'Not recommended for this slice',steps:[['Before',['Session lives in memory','No database adapter']],['Close tab',['Memory is lost','No saved record to reload']],['After',['Session cannot resume','Save/resume acceptance fails','Useful only for a temporary technical step']]],impact:'This alternative cannot deliver the proposed slice’s acceptance criterion.'},
+  {id:'cloud',label:'Alternative · accounts and cloud sync',title:'More capability, more work',status:'Separate architecture approval',steps:[['Choose',['Cross-device progress','Account-backed storage']],['Add',['Authentication and backend','Sync conflict rules','Security, privacy, and operations']],['Effect',['Larger MVP scope','More failure modes to validate','Not authorized by PR #11']]],impact:'Local-first remains the recommended MVP direction; cloud synchronization needs its own justification and approval.'}
+ ],
+ answers:[
+  {id:'wrong',label:'Recommended · incorrect answer',title:'An incorrect answer still advances',status:'Proposed in PR #11',steps:[['Before',['Item 1; zero saved answers','Learner submits a valid but wrong answer']],['Save',['Matcher returns incorrect','Outcome commits successfully']],['After',['Answered: 1; correct: 0','Next: item 2','No claim of mastery']]],impact:'One outcome per occurrence. Re-practicing the same source item requires a new occurrence; scheduling comes later.'},
+  {id:'retry',label:'Recommended · duplicate retry',title:'The same submission counts once',status:'Proposed in PR #11',steps:[['Before',['Attempt A already saved','The caller retries A']],['Compare',['Same ID, item, and raw answer','Read original saved result']],['After',['Same result returned','No extra count or revision','Changed payload would conflict']]],impact:'M1 protects progress from duplicate requests, including retries after completion or discard.'},
+  {id:'tabs',label:'Recommended · conflicting tabs',title:'Newer progress cannot be overwritten',status:'Proposed in PR #11',steps:[['Before',['Tabs A and B read revision 1','Both target item 2']],['Compete',['A commits revision 2','B submits with revision 1']],['After',['A stays saved','B receives a conflict','B must reload before continuing']]],impact:'Read, compare, and write happen in one transaction. No silent last-write-wins.'},
+  {id:'invalid',label:'Recommended · invalid input',title:'Invalid input is not a wrong answer',status:'Existing matcher + proposed session rule',steps:[['Before',['Current item is unanswered','Input is empty or malformed']],['Validate',['Matcher reports invalid input','No attempt is recorded']],['After',['Counts stay unchanged','Current item stays open','Learner can correct the input']]],impact:'M1 preserves matcher distinctions; M3 adds clear accessible feedback.'},
+  {id:'last',label:'Recommended · final answer',title:'Session completion is narrowly defined',status:'Proposed in PR #11',steps:[['Before',['2 of 3 items answered','Last answer is submitted']],['Commit',['Record outcome and completed state','One atomic transaction']],['After',['3 of 3 answered','Session completed','No automatic lesson or mastery credit']]],impact:'Lesson completion and learning metrics need their own approved definitions.'},
+  {id:'overwrite',label:'Alternative · let the last tab win',title:'A later write can erase newer work',status:'Not recommended',steps:[['Before',['Two tabs hold different snapshots','A saves new progress']],['Overwrite',['B writes an older snapshot','No revision comparison']],['After',['A’s saved work can disappear','Counts may become inconsistent','Learner trust is damaged']]],impact:'Reject this shortcut: it undermines the proposed no-lost-update invariant.'}
+ ],
+ resume:[
+  {id:'return',label:'Recommended · return after months',title:'A break does not remove progress',status:'Preservation direction already approved',steps:[['Before',['2 of 3 items saved','One correct and one incorrect']],['Break',['Learner returns months later','Read without time-based mutation']],['After',['Still 2 answered; 1 correct','Resume item 3','No inactivity penalty']]],impact:'D-05 already approves preservation. PR #11 supplies the exact save/resume implementation contract; review scheduling remains separate.'},
+  {id:'discard',label:'Recommended · explicitly discard',title:'Stop resuming, keep saved outcomes',status:'Exact discard effects proposed',steps:[['Before',['2 of 3 items saved','Session still active']],['Discard',['Learner explicitly discards','Persist terminal state']],['After',['No resumable next item','Saved outcomes retained','Repeated discard changes nothing']]],impact:'Discard is not data erasure. Privacy deletion controls need a separate approved slice before release.'},
+  {id:'new',label:'Recommended · start another session',title:'New work does not replace old work',status:'Proposed in PR #11',steps:[['Before',['Session A is unfinished','A contains saved answers']],['Start B',['Create a different session ID','Preserve A’s record']],['After',['A remains resumable','B begins independently','No implicit discard']]],impact:'M1 permits multiple unfinished sessions; later UI determines how learners find and resume them.'},
+  {id:'expire',label:'Alternative · drop work after 7 days',title:'Automatic expiry conflicts with D-05',status:'Not permitted by current approval',steps:[['Before',['Unfinished session','Pending items still exist']],['Expire',['Delete pending work after 7 days','Learner did not discard']],['After',['Resume becomes impossible','Approved preservation is broken','Cannot adopt silently']]],impact:'Changing the preservation decision requires explicit reconsideration and applicable protected-test review; it is not recommended.'},
+  {id:'archive',label:'Future alternative · automatic archive',title:'Archive must preserve resumability',status:'Mechanism not approved yet',steps:[['Before',['Older unfinished session','Pending items retained']],['Archive',['Move it out of the main list','Do not drop answers or pending items']],['Return',['Allow learner to restore/resume','Keep saved progress intact','Define exact UI and trigger first']]],impact:'D-05 allows a future archive only with preservation. PR #11 does not implement automatic archiving.'}
+ ]
+};
+let state={mode:'road',stage:'m1',decision:'storage',scenario:'save'};
+function flow(target,nodes){target.replaceChildren();nodes.forEach(([title,items],i)=>{const n=document.createElement('div');n.className='node';const t=document.createElement('div');t.className='node-title';t.textContent=(i+1)+' · '+title;const list=document.createElement('ul');items.forEach(text=>{const li=document.createElement('li');li.textContent=text;list.append(li);});n.append(t,list);target.append(n);});}
+function render(){
+ root.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage===state.stage)));
+ el('road-mode').setAttribute('aria-pressed',String(state.mode==='road'));el('scenario-mode').setAttribute('aria-pressed',String(state.mode==='scenario'));
+ el('road-panel').hidden=state.mode!=='road';el('scenario-panel').hidden=state.mode!=='scenario';
+ const stage=stages[state.stage];el('stage-title').textContent=stage.title;el('stage-status').textContent=stage.status;flow(el('stage-flow'),stage.nodes);el('stage-gate').textContent=stage.gate;
+ el('decision').value=state.decision;el('scenario').replaceChildren();decisions[state.decision].forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.label;el('scenario').append(o);});
+ const scenario=decisions[state.decision].find(s=>s.id===state.scenario)||decisions[state.decision][0];state.scenario=scenario.id;el('scenario').value=scenario.id;
+ el('scenario-title').textContent=scenario.title;el('scenario-status').textContent=scenario.status;flow(el('scenario-flow'),scenario.steps);el('scenario-impact').textContent=scenario.impact;
+}
+function remember(){const api=window.openai;if(api&&typeof api.setWidgetState==='function'){Promise.resolve(api.setWidgetState({modelContent:{view:state.mode,milestone:state.stage,decision:state.decision,scenario:state.scenario,approval:false},privateContent:{...state}})).catch(()=>{});}}
+function restore(saved){const s=saved&&saved.privateContent;if(!s)return;if(['road','scenario'].includes(s.mode))state.mode=s.mode;if(stages[s.stage])state.stage=s.stage;if(decisions[s.decision])state.decision=s.decision;if(decisions[state.decision].some(x=>x.id===s.scenario))state.scenario=s.scenario;}
+root.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>{state.stage=b.dataset.stage;state.mode='road';render();remember();}));
+el('road-mode').addEventListener('click',()=>{state.mode='road';render();remember();});el('scenario-mode').addEventListener('click',()=>{state.mode='scenario';render();remember();});
+el('decision').addEventListener('change',e=>{state.decision=e.target.value;state.scenario=decisions[state.decision][0].id;render();remember();});el('scenario').addEventListener('change',e=>{state.scenario=e.target.value;render();remember();});
+restore(window.openai&&window.openai.widgetState);render();
+window.addEventListener('openai:set_globals',e=>{const s=e.detail&&e.detail.globals&&e.detail.globals.widgetState;if(s){restore(s);render();}});
+})();
+</script>
