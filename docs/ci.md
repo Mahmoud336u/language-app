@@ -74,8 +74,18 @@ prove that Git author metadata represents a person, or prove every assertion's
 meaning. Lexical detection catches supported skip/focus forms, not arbitrary
 metaprogramming. Human review is still required for semantic weakening, generated
 tests, accessibility changes, and snapshot correctness. The script fails closed on
+
 shallow/unavailable history, oversized source, and inspection resource limits.
 
 Candidate workflows can be changed in a PR, but the trusted integrity job rejects
 those changes and never uses them to judge itself. Required check names alone are
 not a security boundary without branch rules and restricted coding credentials.
+
+Repository is public.
+Main requires all nine existing checks.
+Main requires one eligible approving review, CODEOWNER review, approval after the last reviewable push, and resolved conversations.
+Feature branches block force-pushes and deletion.
+Merge commits preserve RED/GREEN history.
+Mahmoud336u codes; Mahmoud44G reviews.
+Integrity acknowledgments still require a personal comment from Mahmoud336u.
+The owner chose to retain an admin-capable coding account. Record this as the owner-approved exception to the earlier non-admin recommendation, with its security limitation.
