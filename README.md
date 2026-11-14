@@ -3,17 +3,22 @@
 Learn at your pace. Return whenever you're ready.
 
 An accessible, low-pressure language-learning platform for adults. This repository
-currently contains **M0 foundations and the first M1 domain slice**: a neutral
-component harness, a tested German typed-answer matcher, a history-aware integrity
-checker, and CI configuration. The matcher is not yet wired into a learning UI. No courses,
-learning progress, accounts, persistence, or adaptive scheduling are available yet.
+currently contains **M0 foundations and M1 matcher/session APIs**: a neutral
+component harness, a German typed-answer matcher, session progress and IndexedDB
+save/resume, a history-aware integrity checker, and CI configuration. These APIs
+are not yet wired into a learning UI. Courses, accounts, backup/import, and adaptive
+scheduling remain unimplemented. No learner pilot is permitted before the next
+backup/import slice is implemented, reviewed, and passes its approved checks.
 
 ## Roadmap to the MVP
 
-Planning snapshot: **14 November 2026**. M0 closure is merged; M1 has a tested
-answer matcher. The next session save/resume slice is proposed in
-[PR #11](https://github.com/Mahmoud336u/language-app/pull/11). Later milestones
-remain planned. Stages are not percentages or delivery estimates.
+The explorer below preserves the **14 November 2026 planning snapshot** from before
+session implementation. Current status: M0 closure and the matcher are merged;
+[PR #11](https://github.com/Mahmoud336u/language-app/pull/11) approved sessions, and
+[PR #13](https://github.com/Mahmoud336u/language-app/pull/13) implements them with
+quality checks passing and its approved-test-correction merge gate unresolved.
+Backup/import is next. Later milestones remain planned; stages are not percentages
+or delivery estimates. See the [current report](docs/reviews/m1-session-completion-report.md).
 
 ![Unpause Languages roadmap: M0 foundations merged; M1 domain core in progress; M2 content, M3 learning flow, M4 full journey, M5 pilot validation, and the A1 MVP release remain ahead. The selected M1 panel shows approval of the session contract before implementation.](docs/visualizations/mvp-roadmap-preview.png)
 
@@ -115,21 +120,25 @@ npm run test:deployment
 npm run test:mutation
 ```
 
-The browser suite uses the production build, so build before running it. The
+The browser suite uses the production build, so build before running it. It also
+runs the separate, non-shipping IndexedDB harness in Chromium locally and in
+Chromium, Firefox, and WebKit in CI (`npm run test:storage` to run it alone). The
 deployment suite builds automatically and serves assets with local Wrangler;
 it does not provision or deploy anything.
 
 `npm run test:integrity` tests the checker using temporary Git repositories.
 `npm run check:test-integrity` audits this branch against `origin/main` and returns
-nonzero for protected changes requiring owner review. During the first foundation
-PR, this correctly reports governance changes; it is **not** a substitute for the
-base-owned GitHub check, which cannot exist until the owner merges the bootstrap.
+nonzero for protected changes. It is **not** a substitute for the base-owned GitHub
+check. The trusted acknowledgment mechanism covers governance findings only;
+frozen-test findings cannot be cleared by an ordinary PR approval or an
+`/integrity-approve` comment. See [the PR #13 correction record](docs/reviews/m1-session-test-correction.md).
 
 ## Engineering references
 
 - [Hard rules](AGENTS.md) and [engineering policy](docs/tdd-policy.md)
-- [Product decisions](docs/product-decisions.md) — D-03/D-04 approved; D-05/D-15 approved for direction/scope only
+- [Product decisions](docs/product-decisions.md) — D-03/D-04, D-05 v2, and scoped D-10 v1 approved; D-15 approved for course scope only
 - [German answer matching](docs/answer-matching.md)
+- [Session save/resume and persistence boundaries](docs/session-persistence.md)
 - [Architecture](docs/architecture.md)
 - [Testing and TDD evidence](docs/testing.md)
 - [CI, trust bootstrap, and owner setup](docs/ci.md)
@@ -140,6 +149,7 @@ base-owned GitHub check, which cannot exist until the owner merges the bootstrap
 - [Owner authorization](docs/reviews/m0-owner-authorization.md)
 - [M0 verification report](docs/reviews/m0-completion-report.md)
 - [First M1 slice report](docs/reviews/m1-matcher-completion-report.md)
+- [M1 session implementation and remaining merge gate](docs/reviews/m1-session-completion-report.md)
 
 The GitHub repository remains `Mahmoud336u/language-app` by owner instruction. The
 application/package is named `unpause-languages`. MIT license; see [LICENSE](LICENSE).

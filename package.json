@@ -15,12 +15,13 @@
     "test:run": "vitest run",
     "test:integrity": "vitest run tests/contracts",
     "check:test-integrity": "node scripts/check-test-integrity.ts --repo . --base origin/main --head HEAD",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test && npm run test:storage",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "preview:cloudflare": "wrangler dev --local --ip 127.0.0.1 --port 8788",
     "test:deployment": "npm run build && playwright test --config playwright.deployment.config.ts",
-    "test:mutation": "stryker run scripts/stryker.config.json"
+    "test:mutation": "stryker run scripts/stryker.config.json",
+    "test:storage": "playwright test --config playwright.storage.config.ts"
   },
   "dependencies": {
     "react": "19.3.1",
