@@ -1,349 +1,303 @@
 # M1 slice 2: save and resume a German practice session
 
-Date: 2026-11-14. Status: **PROPOSED — awaiting owner decision**.
+Date: 2026-11-14. Status: **APPROVED with owner amendments**.
 Review base: `b1b56a4512e2557a7119af3f21ffb3b5eb33b834`.
+Approval reference: https://github.com/Mahmoud336u/language-app/pull/11
+Owner: @Mahmoud336u. See [the authorization record](m1-session-owner-authorization.md).
 
-This document proposes the architecture, exact scoped D-05/D-10 contract, and
-Tier 1 test plan together. It does not change canonical decision statuses or
-authorize implementation. Approval of this proposal must be recorded in
-`docs/product-decisions.md` before its acceptance tests are written.
+This revision records the owner's chat approval of the simplified architecture,
+scoped D-05 version 2 / D-10 version 1 contract, and amended testing scope. It
+supersedes the original revision-counter proposal at `27600e9`. Recording approval
+is not an implementation or passing-test claim. This PR contains documentation;
+feature code and RED/GREEN test commits follow separately.
 
-## Readiness and owner direction
+## Readiness and scope
 
-- [M0 closure PR #8](https://github.com/Mahmoud336u/language-app/pull/8) merged.
-- [Post-merge quality run](https://github.com/Mahmoud336u/language-app/actions/runs/43536685888) passed on the review base.
-- [Clean trusted inspection](https://github.com/Mahmoud336u/language-app/actions/runs/43534421626) and [rejected tamper probe](https://github.com/Mahmoud336u/language-app/actions/runs/43529660335) supply linked enforcement evidence.
-- On 2026-11-14 the owner instructed: "Now continue on M1 [we don't need a terminal outputs for the filed tests the links will do the work] since all checks has passed".
-- Linked evidence is accepted for this handoff; no copied terminal transcripts are required. These links do not establish unobserved force-push/deletion attempts. Those attempts are not asserted as performed, and their missing transcripts are not used to block this owner-directed M1 review.
-- The D-03/D-04 matcher is implemented in [PR #3](https://github.com/Mahmoud336u/language-app/pull/3). D-05 currently approves preservation direction only; D-10 remains PROPOSED. "Continue on M1" is authorization to advance the work, not an approval of previously unspecified storage semantics.
+[M0 closure PR #8](https://github.com/Mahmoud336u/language-app/pull/8) merged and its
+[main quality run](https://github.com/Mahmoud336u/language-app/actions/runs/43536685888)
+passed. The owner accepts linked test evidence without copied terminal transcripts.
+Links do not establish unobserved force-push/deletion attempts. The existing
+[D-03/D-04 matcher](https://github.com/Mahmoud336u/language-app/pull/3) is implemented.
 
-## Feature proposal and boundary
+Build a tested application API that creates a German typed-answer session, commits
+each answer to IndexedDB, and resumes the next unanswered occurrence after reload.
+Scope: pure transitions, attempt-derived progress, validation, one repository port,
+and one browser adapter. No new runtime dependency: use existing Zod and native
+IndexedDB. Existing Vitest, fast-check, Playwright, and Stryker provide verification.
 
-Provide a tested application API that creates a German typed-answer session,
-commits each accepted answer to IndexedDB, reloads the saved session, and resumes
-at its next unanswered item. Existing matcher behavior remains authoritative.
+The caller supplies the ordered exercise set. Multiple unfinished sessions may
+coexist. No lesson UI, shipping curriculum, session composition, scheduler grades,
+lesson/course completion, mastery, accounts, synchronization, or analytics is added.
+Fixtures are synthetic test data, not reviewed shipping lessons.
 
-Scope: pure session transitions, attempt-derived session progress, runtime data
-validation, a small repository port, one IndexedDB adapter, and real browser
-verification. No production learning UI or lesson publication in this slice.
-
-Multiple unfinished sessions are permitted; starting another never replaces or
-discards an existing one. The caller supplies the ordered exercise set. Session
-composition, Quick/Standard/Long options, scheduling, lesson/course completion,
-mastery, onboarding, and reward mechanics remain outside this contract.
-
-No new runtime dependency is proposed. Zod is already installed; IndexedDB is a
-browser API. Existing Vitest, fast-check, Playwright, and Stryker provide checks.
-A fake IndexedDB dependency is unnecessary: use a small in-memory repository test
-double for orchestration and real Chromium for adapter transactions. Browser
-fixtures use synthetic non-curriculum content and cannot be shipping lessons.
+**Sequencing commitment:** backup/export and import/recovery are the very next
+persistence slice. No learner pilot may begin until that slice is implemented,
+reviewed, and passes its approved checks. Its format, conflict policy, and recovery
+contracts require a separate review before implementation. PWA, erasure controls,
+recovery UI, and supported-device validation remain pre-release work as applicable;
+this approval does not claim these safeguards already exist.
 
 ## Adversarial architecture review
 
 ### Verified facts and limits
 
-The current domain has a pure matcher and no session/storage implementation.
-Zod and browser test tooling are installed. The static React/Vite deployment does
-not require a server for IndexedDB. These are repository facts.
+The application uses static React/Vite and has a pure German matcher, but no session
+store. IndexedDB needs no application server. A transaction's completion event is
+the save acknowledgment; it is not a guarantee against eviction, user deletion,
+device failure, or changes of browser/profile/origin. Cross-engine tests will add
+coverage, but Playwright WebKit is not verification of iOS Safari durability.
 
-IndexedDB transaction completion is the application's save acknowledgment, not
-a guarantee against device failure, browser eviction, user deletion, or origin
-changes. We have not validated current iOS persistence behavior or a PWA eviction
-exemption. The submitted v2 D-10/D-13 proposals remain future release concerns;
-this scoped approval must not be represented as approval of those full proposals.
+### Five risks
 
-### Five consequential risks
-
-| Risk and severity | Trigger and failure mechanism | Learner impact | Smallest mitigation |
+| Risk / severity | Trigger and mechanism | Learner impact | Minimal mitigation |
 | --- | --- | --- | --- |
-| Premature save acknowledgment — high | UI advances after an IndexedDB request succeeds but the transaction later aborts | An apparently saved answer disappears on reload | Publish success only after transaction completion; commit the whole session update atomically |
-| Lost update or double counting — high | Two tabs submit from the same revision, or a retry follows an uncertain response | One answer overwrites another or counts twice | Read/check/write within one readwrite transaction; revision check and durable attempt ID deduplication |
-| Device storage loss — high | Browser clears/evicts storage or the learner changes origin/device | Local progress is unavailable | State durability limits; no automatic resets; keep backup/import and device validation as explicit pre-release work |
-| Broken historical session — high | Content changes, a newer app writes a different schema, or one stored record is corrupt | Resume fails or past answers are silently regraded | Freeze item snapshots; validate persisted records; reject unsupported formats; preserve unreadable records |
-| Scope and data growth — medium | The session slice expands into curriculum, telemetry, sync, or stores an unbounded answer log per item | Slow delivery, opaque progress, unnecessary personal-data retention | One recorded outcome per item occurrence, bounded session inputs, local-only data, derived totals, no background services |
+| False save / high | Request succeeds, then its transaction aborts | An acknowledged answer disappears | Acknowledge only transaction completion; atomically write the aggregate |
+| Lost update or duplicate answer / high | Concurrent tabs or a retried request use stale state | Work is overwritten or counts twice | Read/check current occurrence/write in one transaction; durable attempt-ID deduplication |
+| Local storage loss / high | Browser clears data or learner changes device/origin | Saved progress unavailable | Document local scope; backup/import immediately next; no learner pilot before it works |
+| Invalid historical data / high | Damaged/future record or later source-content changes | Broken resume or silent regrading | Immutable item snapshots, minimal schema validation, typed failures, preserve unreadable data |
+| Premature complexity / medium | Redundant revisions/status/times or speculative migrations grow | More contradictions, tests, and maintenance | Store snapshot/attempts/discard marker; derive state; defer migration and blocked-upgrade scenarios |
 
-### Concrete production failure scenario
+### Concrete failure scenario
 
-Tabs A and B read session revision 1. A answers item 2 correctly and commits
-revision 2. B submits a different answer to item 2 using revision 1. An unconditional
-write replaces A's work. With the proposed transaction and revision contract,
-B receives a conflict and reloads the committed session. A duplicate retry of A's
-same attempt ID returns its original saved result without another count.
+Tabs A and B both see item 2 as current. A commits an answer. B's transaction then
+reads the updated aggregate, sees item 3 is current, and rejects B's item-2 answer.
+Without the check inside the transaction, B could overwrite A's work. Retrying
+A's same attempt ID and exact payload returns its saved result without another
+write, even though item 2 is no longer current. A separate revision counter is not
+needed for these append-only transitions.
 
-### Exactly three owner questions
+### Three consequential questions, answered by the owner
 
-1. **Data flow:** Approve IndexedDB with transaction-completion acknowledgment and explicit retryable save errors, with backup/import/PWA deferred to a separate pre-release slice rather than claiming durable cross-device recovery now?
-2. **State correctness:** Approve one committed outcome per item occurrence, exact attempt-ID retries without double counting, and revision conflicts that require reload instead of overwriting newer work?
-3. **Learner behavior:** Approve indefinite resume, incorrect answers still advancing the session, and explicit discard ending resume while retaining already recorded attempts, with session completion making no claim of lesson completion or mastery?
+1. **Data flow:** Use completion-acknowledged IndexedDB and typed save failures, with backup/import next and no pilot before it exists? **Yes.**
+2. **State correctness:** Use one outcome per occurrence, exact-ID retries, transactional occurrence conflicts, derived state, and supplied valid timestamps without a backward-clock clamp? **Yes, with these simplifications.**
+3. **Learner behavior:** Preserve unfinished work indefinitely, advance after incorrect answers, retain attempts on discard, and defer display-only staleness/archival grouping? **Yes.**
 
 ### Lower-complexity alternative
 
-An in-memory session reducer alone would be smaller and reuse most transition
-tests. It would lose state on reload, so it cannot satisfy this slice's save/resume
-acceptance criterion. A localStorage JSON blob would reduce adapter code but lack
-the chosen transactional concurrency guarantee. Recommend one IndexedDB store and
-one repository port; no event bus, synchronization layer, shared store framework,
-separate progress database, or speculative migration system.
+In-memory state alone is smaller but cannot satisfy reload/resume. A localStorage
+blob lacks the selected transactional concurrency guarantee. The approved design
+uses one IndexedDB store and one repository port, without persisted revisions,
+status, aggregate counters, next index, or updatedAt; no event bus or sync layer.
 
 ### Three invariants
 
-1. A successful save has exactly one durable attempt for that item occurrence;
-   repeating its request never changes totals, revision, or saved feedback.
-2. Failed, invalid, or stale writes do not change committed session data. A rejected
-   submission never increases answered/correct counts.
-3. The application never changes saved outcomes or removes pending work because
-   time passes. Explicit discard may end resumability but retains saved outcomes.
+1. Each saved occurrence has one outcome; exact retries never change counts or saved feedback.
+2. Invalid, failed, and conflicting submissions leave committed data unchanged.
+3. Passing time never changes stored progress or pending work; explicit discard retains saved attempts.
 
 ### Two adversarial scenarios
 
-1. Two same-origin tabs in one browser profile use separate database connections
-   to write the same revision concurrently; retry the winning request after reload
-   and attempt to reuse its ID with another
-   payload. Verify one winner, no lost update, stable counts, and safe conflicts.
-2. Abort a transaction after its put request succeeds, then reload. Separately
-   corrupt one record and present a future schema version. Verify no false save
-   acknowledgment, no partial write, no automatic deletion, and continued access
-   to unrelated valid sessions.
+1. Two same-origin tabs in one browser profile, using separate connections, answer
+   the same current occurrence; verify one winner, stable retries, changed-payload
+   conflicts, and a later discard that preserves the winning answer.
+2. Abort after a successful put request, then reload; separately present one corrupt
+   or unsupported record. Verify no false acknowledgment, no partial write, no
+   automatic reset, and continued access to unrelated healthy sessions.
 
 ### Learner-facing acceptance criterion
 
-Given a three-item session with one correct and one incorrect answer acknowledged
-as saved, closing and reopening the application later restores both outcomes,
-shows two answered and one correct, and resumes at item 3. A failed save must not
-be presented as saved or silently advance the session. This slice verifies that
-contract through application/browser tests; the learner-facing UI arrives later.
+A three-item session with one correct and one incorrect answer acknowledged as saved
+reloads with two answered, one correct, and item 3 current, even after a long break.
+A failed save never silently advances. This domain slice verifies the contract
+through application and browser tests; the learning interface is a later slice.
 
 ### Technical verdict
 
-**BUILD NOW** for the bounded slice, after owner approval of this proposal.
-The verdict is advisory and is not an approval or an implementation claim.
+**BUILD NOW** for this bounded, owner-approved slice. The original advisory verdict
+was not authorization; the subsequent owner decisions are recorded separately.
 
-## Proposed product contract
+## Approved scoped contract
 
-If approved, record D-05 version 2 and a scoped D-10 version 1 with the approval
-reference and the clauses below. D-03/D-04 version 1 remains unchanged. D-05's
-already approved indefinite-preservation direction is retained. Full D-10 backup,
-import, platform support, and future-version migration behavior is not implied.
+These clauses are the shared D-05 v2 / D-10 v1 contract. D-03/D-04 remain unchanged.
 
-### C-01: Session snapshot and validation
+### C-01: Minimal snapshot and validation
 
-- A session has a caller-supplied unique session ID, `schemaVersion: 1`, revision,
-  creation/update UTC timestamps, state `active | completed | discarded`, an
-  ordered item snapshot, and committed attempts. IDs are nonempty ASCII strings
-  matching `[A-Za-z0-9._:-]{1,128}`. A session ID collision returns conflict and
-  cannot overwrite an existing record.
-- Each item snapshot contains a unique occurrence ID within that session, source
-  content ID/version, language `de`, plain-text prompt, and the complete approved
-  German answer definition. Repeated source content is allowed under different
-  occurrence IDs. Occurrence order and snapshots never change after creation.
-- Proposed engineering bounds: 1–100 occurrences per session and 1–4,000 UTF-16
-  code units per prompt, containing non-whitespace text. Prompts must be well-formed
-  Unicode with no control/format characters except tab, CR, LF. Content ID/version
-  use the same ID bounds. Answer definitions retain D-03's existing 1,000-unit /
-  20-variant limits and validity rules. These are resource bounds, not approved
-  pedagogical session lengths.
-- Reject unknown schema fields and malformed input at public/persistence
-  boundaries. Reject duplicate occurrence IDs and any invalid answer definition
-  before creating a session. Canonicalize omitted matcher flags to false and
-  omitted variants to an empty array in stored snapshots.
-- Initial revision is 0. No separate saved next-item index or saved aggregate
-  counters: derive them from the contiguous attempt prefix. One attempt per
-  occurrence, in snapshot order. Completed means every occurrence has a saved
-  attempt; discarded means explicitly stopped before completion. For active or
-  completed records revision equals attempt count; for discarded records it equals
-  attempt count plus one. Attempts have nondecreasing timestamps between createdAt
-  and updatedAt; updatedAt is the last mutation's effective time.
+- Persist only `snapshot`, `attempts`, and nullable `discardedAt`. The snapshot
+  contains session identity, record `schemaVersion: 1`, creation time, and ordered
+  item definitions. Each item holds an occurrence ID, source content ID/version,
+  language `de`, plain-text prompt, and the complete German answer definition.
+- IDs are ASCII strings matching `[A-Za-z0-9._:-]{1,128}`. Occurrence IDs are unique
+  within a session; repeated source content is allowed under different occurrence
+  IDs. A session ID collision conflicts and never overwrites an existing record.
+- Resource bounds: 1–100 occurrences; prompts 1–4,000 UTF-16 code units with
+  non-whitespace text, well-formed Unicode, and no control/format characters except
+  tab/CR/LF. Content ID/version use the ID bounds. Answer definitions retain
+  D-03's 1,000-unit / 20-variant bounds and validity rules. These are engineering
+  bounds, not approved pedagogical session presets.
+- Reject unknown schema fields, malformed input, duplicate occurrence IDs, and
+  invalid answer definitions before creation. Store omitted matcher flags as false
+  and omitted variants as an empty array. Caller mutation cannot alter a snapshot.
+- Attempts form a contiguous prefix of the item order with unique attempt IDs and
+  one outcome per occurrence. No stored revision, status, updatedAt, next-item index,
+  or aggregate counters. No revision bounds or redundant-field consistency checks.
 
-### C-02: Time and identity
+### C-02: Time and derived state
 
-- Time comes through an injected clock; IDs through caller input/injected ID
-  generation. Domain functions never read the system clock or random source.
-- UTC timestamps are integers from 0 through 8,640,000,000,000,000 milliseconds.
-  Invalid clock values reject a new mutation. For backward clock movement, a
-  mutation's timestamp is `max(previousUpdatedAt, suppliedNow)`. Creation uses
-  suppliedNow. Revision/order, not wall-clock time, determines attempt ordering.
-- Reading/resuming never mutates timestamps, revision, state, or progress. Exact
-  retries return saved data without reading a new clock value.
+- Inject the clock and supply/inject IDs; no system time or randomness in domain
+  functions. Valid timestamps are integer UTC milliseconds from 0 through
+  8,640,000,000,000,000. Invalid time rejects a new mutation.
+- Store valid time as supplied, including backward movement. Sequence order, not
+  timestamps, orders attempts. Do not clamp timestamps or require monotonic time.
+- Derive status: discarded when discardedAt exists; otherwise completed when every
+  item has an attempt; otherwise active. A valid discarded session was explicitly
+  stopped before completion. A fully answered record with a discard marker is
+  inconsistent and rejected as corrupt.
+- Derive last activity time from discardedAt, otherwise the last attempt's time,
+  otherwise snapshot creation time. It may move backward when the device clock
+  changes. Reading/resuming never changes data. Exact retries and repeat discard
+  are no-ops and do not read a new clock value.
 
-### C-03: Submitting an answer
+### C-03: Submit and retry
 
-- Submission contains session ID, expected nonnegative safe-integer revision,
-  attempt ID (same ID bounds), current occurrence ID, and raw learner answer.
-- Load and validate committed state, check for an existing attempt ID, then check
-  active state, revision, and current occurrence. Attempt IDs are unique within
-  a session. Reusing an existing ID for the same occurrence and exact raw answer
-  returns its original result and current session snapshot without another write.
-  Expected revision and supplied time are excluded from retry payload equality.
-  A reused ID with a different occurrence or raw answer returns conflict.
-- Exact committed retries still work after completion or discard. A new attempt
-  on a terminal session returns a state error. A stale revision or non-current
-  occurrence returns conflict; never auto-overwrite or auto-submit after reload.
-- Evaluate using the existing D-03/D-04 matcher. Only `correct` and `incorrect`
-  create an attempt. `invalid-input` and `invalid-exercise` do not count or advance
-  anything and do not become incorrect answers.
-- Store the occurrence ID, attempt ID, exact raw answer, matcher result, effective
-  timestamp, and `evaluationVersion: de-v1`. Stored outcomes are historical facts;
-  resume and progress calculation do not regrade them against changed content.
-- Increment revision once for a new saved answer. Both correct and incorrect
-  answers advance to the next occurrence. The final answer atomically changes
-  state to completed. With the snapshot bound, valid revisions never exceed 100
-  (a discarded session has at most 99 attempts plus its discard revision).
-- Resolving a put request is not success: acknowledge saved output only after the
-  transaction's completion event. A failed write returns a typed failure, retains
-  the previous committed state, and permits retry with the same attempt ID.
-  Unsaved typed text and a killed tab's in-memory pending request are not promised
-  recoverable. Future UI must distinguish pending, saved, and failed states.
+- A submission supplies session ID, attempt ID, occurrence ID, and raw learner
+  answer. It does not supply an expected revision.
+- Load and validate committed state; look up the attempt ID before checking current
+  occurrence or terminal state. Within this session, the same ID, occurrence, and
+  exact raw answer returns the original result plus the current snapshot without
+  writing. Reusing the ID with a different payload conflicts. Time is not part of
+  retry equality. Exact committed retries work after completion or discard.
+- A new attempt on a terminal session returns a state error. A non-current
+  occurrence conflicts. Reload before continuing after a conflict; never silently
+  overwrite, skip pending items, or auto-submit the stale answer to a different item.
+- Evaluate with D-03/D-04. Only correct/incorrect results create attempts. Invalid
+  input or invalid exercise errors never count as wrong or advance the session.
+- Store occurrence ID, attempt ID, exact raw answer, matcher result, supplied valid
+  timestamp, and `evaluationVersion: de-v1`. Historical results are not regraded on
+  resume or against later source content.
+- Correct and incorrect saved outcomes both advance. Completion is derived from
+  the final attempt, so there is no separate completion update to lose.
+- Acknowledge only after transaction completion, not put success. Save failures
+  return distinguishable typed outcomes and preserve prior committed state; a
+  retry can reuse the attempt ID once the cause permits. Not every storage failure
+  is immediately retryable. Unsaved text or a killed tab's pending request is not
+  promised recoverable. Future UI must distinguish pending/saved/failed states.
 
-### C-04: Resume, discard, and derived progress
+### C-04: Preserve, discard, and report progress
 
-- Active sessions remain resumable indefinitely. No inactivity expiry, automatic
-  archive, deletion, negative streak, or timer is introduced.
-- Explicit discard uses session ID and expected revision. It increments revision
-  once, retains the snapshot and all saved attempts, and changes state to
-  discarded. A repeat discard of an already discarded session is a no-op; an
-  attempted discard of a completed session is a state error. A stale first
-  discard conflicts. Creating another session never discards the previous one.
-- Per-session progress is derived: total = snapshot length; answered = saved
-  attempt count; correct = count of saved correct results; incorrect = count of
-  saved incorrect results; unanswered = total minus answered; accuracy = null
-  when answered is zero, otherwise correct / answered (0–1, no display rounding).
-- A discarded session can retain unanswered occurrences, but has no resumable
-  current item. Completed/discarded sessions remain readable. Discard is not
-  erasure of learning history; deletion/privacy controls need a separate slice.
-- Session completion is not lesson/course completion or mastery. No global
-  "learned vocabulary", streak, skill, CEFR, or improvement metric is fabricated.
+- Unfinished sessions remain resumable indefinitely until explicit discard.
+  Inactivity causes **no automatic state change** or deletion. Staleness and archival
+  grouping may later be derived for display without mutating stored data; they
+  must preserve access to pending work and permit resumption. No stale threshold
+  or archive UI is implemented here.
+- Discard uses session ID, with no revision precondition. In one transaction it
+  reads current state and stores discardedAt, retaining the snapshot and attempts.
+  A stale discard is accepted: if another tab just saved an answer, that answer is
+  retained. Repeated discard is a no-op; discarding a completed session is a state
+  error. If another tab completed the session first, discard returns that error.
+- Starting another session never discards or overwrites an existing one. Completed
+  and discarded records remain readable; neither has a resumable current item.
+  Discard is not erasure. Privacy deletion controls remain a separate slice.
+- Derive total, answered, correct, incorrect, and unanswered from the snapshot and
+  attempts. Accuracy is null at zero answers, otherwise correct / answered in 0–1,
+  without display rounding. No fabricated global mastery, CEFR, streak, vocabulary,
+  improvement, or lesson/course-completion metrics.
 
-### C-05: Persistence and concurrency
+### C-05: Atomic persistence and connection lifecycle
 
-- Use IndexedDB database `unpause-languages`, database version 1, store `sessions`
-  keyed by session ID. Record schema version and database version are distinct.
-  One validated session record is the authoritative aggregate.
-- Create uses add semantics. Mutations load, validate, compare revision, compute,
-  and write within one readwrite transaction on the session store. Avoid async
-  network/timer gaps while that transaction is active. A response is returned
-  only after commit; abort/error never returns success.
-- Two competing requests for the same revision cannot both append different
-  answers. One commits and the other conflicts, unless it is the exact committed
-  retry. No duplicated authoritative counters, last-write-wins, or localStorage
-  fallback is permitted.
-- Storage unavailable/denied, quota exhaustion, aborted transactions, blocked
-  upgrades, and unsupported schemas return distinguishable typed outcomes;
-  browser-specific messages are not contracts. At open, a blocked upgrade is
-  reported and any eventual late-opened connection is closed without writes.
-  Existing connections close on versionchange and require reopening for use.
-- Use schema and invariant validation on reads and before writes: unique IDs,
-  contiguous attempts, result shape and valid matched-answer index, timestamps,
-  revision bounds, and consistent state. Validation is not proof that local data
-  was produced by a real learner; this is not an anti-tampering security boundary.
+- IndexedDB database `unpause-languages`, database version 1, store `sessions`,
+  keyed by the session ID in the snapshot. Record and database versions are distinct.
+  A validated session aggregate is the single authority.
+- Create uses add semantics. Mutations read, validate, check current occurrence,
+  compute, and write in one readwrite transaction. No network/timer gaps inside it.
+  Responses follow transaction completion; errors/abort cannot yield saved output.
+- Competing answers to the same occurrence cannot both append: one wins, the other
+  conflicts, unless it is the exact committed retry. No last-write-wins or silent
+  localStorage/in-memory fallback.
+- Distinguish unavailable/denied storage, quota exhaustion, transaction abort, and
+  unsupported formats using typed outcomes, not browser-specific message strings.
+- On versionchange, close the connection and require reopening for further work.
+  Test closure through a deletion request from another connection; this exercises
+  existing version-1 lifecycle behavior without implementing a migration.
+- Migration-transition and blocked-upgrade tests are deferred until a real upgrade
+  is introduced. Keep abort-after-put-success testing now. Do not claim simulated
+  future versions prove a working migration.
 
-### C-06: Corruption, empty storage, and versions
+### C-06: Corrupt data, absent data, and release sequencing
 
-- An unreadable record returns `corrupt-data` and remains untouched; no automatic
-  reset, repair, deletion, or success-shaped empty session. Listing reports valid
-  sessions and unavailable record IDs/reasons separately so other sessions remain
-  usable. Unsupported record versions are reported distinctly and not rewritten.
-- Reading a known absent ID returns not-found. An empty store returns no saved
-  sessions, never an assertion that this is the learner's first visit. Eviction
-  cannot be distinguished reliably from no prior usage without external evidence.
-- First use creates database/store version 1. There is no shipped legacy storage
-  format to migrate. Do not invent a v0 schema or claim migrations tested without
-  a real transition. Future migrations require exact approved contracts, backup
-  and rollback/failure handling before their own tests. A newer database version
-  unsupported by this app blocks writes and is never deleted/recreated. A version-1
-  database missing its expected store is corrupt, not an empty fresh database.
-- Data remains in this origin/browser profile. No account, network transfer,
-  analytics, diagnosis field, persistent-storage request, or service worker is
-  introduced. Store only session snapshots and answer data needed by this slice.
-- Full export/import, user data erasure, recovery UI, and current-device storage
-  validation remain explicit work before real learner release. The owner's v2
-  backup/PWA concerns remain open, not rejected or silently satisfied. This
-  internal domain slice is not permission to launch a local-only product without
-  those reviewed safeguards.
+- Validate on read and before write: minimal record schema, unique IDs, contiguous
+  attempts, result shape and matched-answer index, individually valid timestamps,
+  and discard consistency. Do not re-evaluate saved answers. Local validation is
+  not proof that data was produced by a real learner or an anti-tampering boundary.
+- Corrupt records return corrupt-data and remain untouched. Listing reports healthy
+  sessions and unavailable record IDs/reasons separately. Future record formats
+  are reported distinctly and never overwritten or treated as empty storage.
+- Known absent session IDs return not-found; empty storage means no saved sessions,
+  not proof of a first visit. Browser eviction cannot be distinguished reliably
+  from no prior usage without external evidence.
+- First use creates database/store version 1. A version-1 database missing its store
+  is corrupt. A newer database is unsupported; never delete/recreate it. Test safe
+  rejection, not invented migrations. Actual future upgrades need separate contracts.
+- Keep data local to the browser/profile/origin: no account, network transfer,
+  analytics, health data, service worker, or persistent-storage request in this slice.
+- Backup/export and import/recovery are the **next persistence slice**. **No learner
+  pilot before they exist, are reviewed, and pass approved checks.** The present
+  slice is an internal domain deliverable, not release authorization.
 
-## Implementation boundaries after approval
+## Implementation and CI boundaries
 
-- `src/domain/session.ts`: immutable transitions, validation of domain invariants,
-  and derived progress. No browser/UI imports.
-- `src/application/session-service.ts`: create/load/submit/discard use cases;
-  matcher composition and injected clock; typed outcomes for future UI.
-- `src/application/session-repository.ts`: the single port needed for atomic
-  create/load/list/update operations. Atomic mutation must execute the pure
-  transition against the state actually read inside the transaction, not accept
-  an unconditional snapshot produced from a stale earlier read.
-- `src/infrastructure/indexeddb-session-repository.ts` and a focused persisted-data
-  schema module: browser transactions and Zod validation. No framework dependency.
-- New contract/browser fixture files only. Existing contracts, shared support,
-  matcher output rules, and foundation UI stay unchanged.
+- Pure session transitions/progress in `src/domain/`; matcher composition and use
+  cases in `src/application/`; atomic repository port and one IndexedDB adapter.
+  No framework imports in domain/application logic or speculative extra services.
+- Use an in-memory repository double for use-case tests and real browser IndexedDB
+  for the adapter. New synthetic fixtures/harness assets never enter production.
+- New Tier 1 files only. Existing committed contracts and shared support remain
+  frozen. Additional coverage after a RED commit belongs in new files.
+- Storage browser coverage uses Chromium locally and Chromium, Firefox, and WebKit
+  in CI. Keep existing UI/deployment suites and required check names. Run the added
+  engine coverage under the existing required `test:e2e` job so failures block it;
+  no manual ruleset changes or new external infrastructure are needed.
+- A focused storage configuration/harness can isolate these adapter tests. No
+  existing test is removed, skipped, or excluded from required execution. CI and
+  configuration additions remain protected changes requiring the normal owner
+  integrity acknowledgment before merge.
+- Playwright WebKit is not iOS Safari certification. Device storage durability
+  validation remains separate pre-release work.
 
-These names are proposed implementation locations, not a requirement for extra
-classes or empty abstractions. The exact TypeScript API may be kept small without
-changing the approved behaviors.
+## Amended Tier 1 / browser test plan
 
-## Tier 1 test plan for owner review
+The owner approved the initial plan with the simplifications and added engine
+coverage in this conversation. These groups consolidate that approved scope;
+revision tests, monotonic-clock tests, and speculative upgrade tests are removed
+before any test is written or frozen.
 
-New files only: `tests/contracts/session-state.test.ts`,
-`session-service.test.ts`, and `session-storage-validation.test.ts`.
-Real-browser adapter tests belong in a new `tests/e2e/session-storage.spec.ts` with
-an isolated test-only adapter harness. Harness assets must not enter the production
-build. A new configuration/dependency would require its usual governance review;
-no existing frozen fixture or setup file may be edited to add it.
-Each contract file is created once and then frozen. Later behavior groups require
-additional new files rather than appending to any committed contract file.
-
-| Test group/name | Expected behavior | Clauses |
+| Group | Expected behavior | Clauses |
 | --- | --- | --- |
-| create_valid_snapshot | Creates revision 0, empty attempts, next first item; input objects unchanged | C-01/C-02 |
-| reject_invalid_snapshot | Covers 0/101 items, duplicate IDs, malformed prompts/answers/flags, unknown fields and exact boundaries | C-01 |
-| reject_session_id_collision | Cannot overwrite an existing session, including completed/discarded records | C-01/C-05 |
-| record_correct_and_incorrect | Saves either outcome once and advances; last outcome completes in the same commit | C-03 |
-| reject_invalid_without_progress | Invalid input/exercise and malformed command leave every saved field unchanged | C-03 |
-| retry_same_attempt | Returns original result with no extra write/count/revision, including after completion/discard | C-02/C-03 |
-| reject_reused_attempt_payload | Same attempt ID with different raw input/occurrence conflicts | C-03 |
-| reject_stale_or_out_of_order | A stale revision or non-current occurrence cannot overwrite/skip pending work | C-03 |
-| stop_terminal_writes | New answers on completed/discarded sessions fail; completed discard fails | C-03/C-04 |
-| derive_progress | Correct/incorrect/unanswered/accuracy match saved facts; empty accuracy is null | C-04 |
-| discard_retains_attempts | Explicit discard retains outcomes, ends resume, increments once; repeat is no-op | C-04 |
-| preserve_multiple_sessions | Creating another session never changes the previous session | C-04 |
-| resume_without_expiry | Arbitrary inactivity/UTC boundary/timezone changes have no effect on reads | C-02/C-04 |
-| handle_clock_bounds | Invalid time is rejected; backward time clamps; retries retain original time | C-02/C-03 |
-| save_before_success | Pending/aborted repository writes cannot yield a saved answer or advance state | C-03/C-05 |
-| keep_snapshots_and_feedback | Mutating input objects or later source content cannot alter saved items/results | C-01/C-03 |
-| validate_persisted_invariants | Corrupt/future-version data yields typed errors and remains unchanged | C-05/C-06 |
-| preserve_healthy_records | Listing reports unreadable records separately; healthy sessions remain usable | C-06 |
-| distinguish_absence_from_corruption | Missing session/empty DB is distinct from corrupt/future-version storage | C-06 |
-| no_implicit_recovery | Quota/denial/version failures never delete data or silently fall back to memory | C-05/C-06 |
-| generated_transition_sequences | Seeded fast-check sequences preserve uniqueness, contiguous order, no mutation, idempotency, and derived counts | C-01–C-06 |
-| real_browser_round_trip | Actual IndexedDB survives page reload and restores exact snapshot/attempts | C-01–C-06 |
-| real_browser_concurrent_tabs | Competing same-revision writes produce one winner without lost work | C-03/C-05 |
-| real_browser_abort_and_versionchange | Force transaction abort after request success; handle upgrades and connection closure without false success | C-05/C-06 |
+| create_and_validate_snapshot | Exact input bounds, stable snapshots, unknown/malformed fields rejected before creation | C-01 |
+| preserve_session_identity | Collisions cannot overwrite; separate sessions remain independent | C-01/C-04 |
+| record_outcomes_once | Correct/incorrect advance once; final saved attempt derives completion | C-03 |
+| reject_invalid_without_progress | Invalid input/exercise/command leaves saved data and counts unchanged | C-03 |
+| retry_and_payload_identity | Exact retries return original results, including terminal sessions; changed payload conflicts | C-02/C-03 |
+| reject_wrong_occurrence | Non-current answers cannot skip or replace saved work | C-03/C-05 |
+| derive_status_and_progress | Minimal data derives status/current item/counts/accuracy without stored duplicates | C-02/C-04 |
+| discard_current_saved_state | Discard preserves attempts including recently saved work; repeat is a no-op; completed discard fails | C-04 |
+| resume_without_time_mutation | Long inactivity, timezone/day boundaries, and new sessions never expire or archive stored work | C-02/C-04 |
+| accept_nonmonotonic_valid_time | Valid backward time is stored unchanged; invalid time fails; no-op retries do not read time | C-02 |
+| validate_minimal_history | Reject invalid IDs/order/results/timestamps/discard combinations without regrading history | C-01/C-06 |
+| preserve_unreadable_records | Corrupt/future records remain untouched and do not hide healthy sessions | C-06 |
+| distinguish_storage_states | Empty/absent/corrupt/missing-store/future-version storage produce distinct safe outcomes | C-05/C-06 |
+| acknowledge_only_commit | Pending/aborted writes never resolve as saved; quota/denial fail without fallback or reset | C-03/C-05 |
+| generated_transition_sequences | Seeded sequences preserve order, uniqueness, immutability, idempotency, and actual progress | C-01–C-06 |
+| browser_reload_round_trip | Actual IndexedDB restores exact snapshots, attempts, and derived next item after reload | C-01–C-06 |
+| browser_concurrent_connections | Two same-origin tabs serialize competing answers and preserve committed work on retry/discard | C-03–C-05 |
+| browser_abort_and_connection_close | Abort after request success preserves old state; versionchange closes a live connection | C-05/C-06 |
 
-Quota/denial fault tests use controlled failures; ordinary browser round-trip and
-concurrency tests must also exercise actual IndexedDB. Browser test claims are
-limited to the configured Chromium environment, not Safari/iOS or all devices.
+Browser groups run against all three engines in CI. Controlled quota/denial faults
+supplement real transactions; they do not replace actual persistence/concurrency
+coverage. Browser failure details must remain visible in CI artifacts.
 
-## RED / GREEN / REFACTOR and quality gates
+## Execution sequence and gates
 
-1. Owner approves the architecture, scoped C-01–C-06 contract, and test plan; record
-   the exact D-05/D-10 versions and approval reference before test commits.
-2. Add importable behaviorless seams only as needed for meaningful RED. Write new
-   tests for the first approved behavior group, run them, observe assertion
-   failures, and commit tests separately. No broken-import RED or speculative
-   tests for future backup/scheduler features.
-3. Implement the minimum transition/use case/adapter needed for those tests; run
-   GREEN. Repeat in small groups, preserving every committed contract.
-4. Refactor only when useful; rerun the applicable regression suite.
-5. Run lint, typecheck, full Vitest, Playwright, build, contract suite, raw/trusted
-   integrity, deployment compatibility, and domain mutation analysis. Review
-   survivors with new tests where needed; never lower thresholds or edit frozen
-   expectations. Confirm the test harness is absent from production output.
-6. Report actual results and commit hashes, linking CI logs and artifacts. Owner
-   evidence links suffice; copied terminal output is not an additional gate.
-
-## Approval record
-
-- Implementation approval: **PENDING**.
-- D-05 version 2 / scoped D-10 version 1: **PROPOSED**.
-- Tier 1 test plan: **PENDING owner review**.
-- Current PR scope: documentation proposal only; no RED/GREEN implementation yet.
-- Remaining release questions: full backup/import, erasure, recovery UX, supported
-  browsers, PWA/iOS evidence, reviewed content, scheduling, and actual lesson UI.
+1. Record the owner-approved D-05/D-10 versions and authorization; independent
+   reviewer checks this consolidated contract and plan. Use the existing protected
+   governance acknowledgment and merge process for this documentation PR.
+2. Start the implementation branch from the recorded contract. Add importable
+   behaviorless seams only as needed for meaningful assertion-based RED; no import
+   failures counted as test evidence. Commit new tests separately before implementation.
+3. Implement GREEN in small behavior groups. Refactor when useful without editing
+   frozen tests. Keep new fixture/harness files separate from shipping content.
+4. Verify lint, typecheck, full Vitest, contract suite, all required browser engines,
+   build, deployment compatibility, integrity, and domain mutation analysis. Review
+   survivors; new counterexamples go in new test files. Verify no harness ships.
+5. Report actual commit/results and CI links. Evidence links suffice; no copied
+   terminal transcript is an additional gate. Backup/import follows immediately as
+   the next persistence slice; broader M1 and the MVP remain incomplete.

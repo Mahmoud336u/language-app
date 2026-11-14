@@ -7,7 +7,7 @@ These are the behaviors the tests depend on. The original policy left them open,
 - **APPROVED**: confirmed by the owner. Tests may be written against it.
 - **REJECTED**: do not implement.
 
-D-03 and D-04 are owner-approved implementation contracts. D-05 and D-15 are approved only within their stated direction/scope. Other decisions remain PROPOSED. The owner approved these changes in the current conversation on 2026-11-13; see `docs/reviews/m1-matcher-owner-authorization.md`. Unapproved v2 alternatives remain in `docs/reviews/product-decisions-v2-submitted.md`; they have not been adopted silently.
+D-03/D-04, D-05 version 2, and scoped D-10 version 1 are owner-approved implementation contracts. D-15 remains approved for course scope only. Other decisions remain PROPOSED. Matcher approval is recorded in `docs/reviews/m1-matcher-owner-authorization.md`; the 2026-11-14 amended session approval is recorded in `docs/reviews/m1-session-owner-authorization.md`. Unapproved v2 alternatives remain in `docs/reviews/product-decisions-v2-submitted.md`; they have not been adopted silently.
 
 **Evidence stance.** Research on how ADHD affects second-language learning is thin: mostly small studies, many with children, and the adult gamification results are mixed. Design choices that are specific to ADHD (D-06, D-07, D-08) are therefore treated as **hypotheses to measure** (see the table at the end), not as established facts.
 
@@ -62,16 +62,42 @@ The owner approved the exact D-03/D-04 contract, examples, Tier 1 test plan, and
 - Grammatical case (Nominativ, Akkusativ, Dativ, Genitiv) remains content metadata, separate from letter case. The matcher infers neither noun identity nor grammatical correctness.
 - Future A1/A2 UI reminders require the later UI slice; no learner-facing copy or content schema is approved here.
 
-## D-05: Preservation of unfinished sessions
+## D-05: Preservation and state of unfinished sessions
 **Status:** APPROVED
 **Approved by:** @Mahmoud336u
-**Approval reference:** https://github.com/Mahmoud336u/language-app/pull/2
-**Version:** 1 (2026-11-13)
-**Approval scope:** preservation direction only; no session/persistence implementation authorized.
+**Approval reference:** https://github.com/Mahmoud336u/language-app/pull/11
+**Version:** 2 (2026-11-14)
+**Approval scope:** the session save/resume domain slice, with scoped D-10 version 1.
 
-- Unfinished sessions remain resumable until the learner explicitly discards them.
-- Any future automatic archive must preserve pending items and permit resumption. No automatic seven-day deletion or dropping unanswered items.
-- Answer-write semantics, atomicity, failure recovery, discard effects, and session counting require their own exact approved contract with D-10. The earlier immediate-persistence proposal remains unimplemented.
+The owner approved the original proposal with amendments in the current conversation;
+see `docs/reviews/m1-session-owner-authorization.md`. The complete shared contract is
+C-01–C-06 in `docs/reviews/m1-session-persistence-review.md`, including input bounds,
+validation, typed failures, retries, time, and persistence. That amended contract and
+its test plan are part of this approval; the original revision-counter proposal is
+superseded before any associated test is written or frozen.
+
+- Store only snapshot (identity, schema version, creation time, item definitions),
+  ordered attempts, and nullable discardedAt. Derive status, next item, progress,
+  and last activity time; no stored revision/status/updatedAt or aggregate counters.
+- One outcome per occurrence. Correct and incorrect answers advance; invalid input
+  does not count or penalize. Exact attempt-ID/payload retries return the saved
+  result without double counting, including after completion/discard.
+- Compare current occurrence inside the write transaction; conflicting answers
+  require reload and cannot overwrite newer work. No revision precondition.
+- Unfinished work remains resumable indefinitely until explicit discard. Inactivity
+  causes **no automatic state change** or deletion. Future display-only staleness or
+  archival grouping must preserve access to pending work and permit resumption;
+  thresholds and UI remain unimplemented and unapproved.
+- Explicit discard retains all recorded attempts, including answers another tab
+  saved just before the discard. Stale discard is acceptable. Repeat discard is a
+  no-op; completed sessions cannot be discarded. Starting a new session never
+  replaces or discards existing work. Discard is not privacy erasure.
+- Use an injected clock, accepting valid timestamps as given without a backward
+  clamp. Sequence determines order. Read/resume and exact retries do not change time
+  or progress. No inactivity penalties or fabricated lesson/mastery metrics.
+- **Next slice / pilot gate:** backup/export and import/recovery are the very next
+  persistence slice. No learner pilot before they are implemented, reviewed, and
+  pass their approved checks. Their exact contract requires the next review.
 
 ## D-06: Streaks and rewards
 **Status:** PROPOSED
@@ -97,10 +123,38 @@ The owner approved the exact D-03/D-04 contract, examples, Tier 1 test plan, and
 - **Why:** tests verify the engine, not the German. A wrong grammar explanation would pass every test.
 - **Unlocks:** A6.
 
-## D-10: Persistence
-**Status:** PROPOSED
-- **Proposed default:** local-first storage (IndexedDB), no accounts in the MVP, versioned schema with forward migrations. JSON export/import as a later backup option.
-- **Unlocks:** A4.
+## D-10: Session persistence
+**Status:** APPROVED
+**Approved by:** @Mahmoud336u
+**Approval reference:** https://github.com/Mahmoud336u/language-app/pull/11
+**Version:** 1 (2026-11-14)
+**Approval scope:** version-1 IndexedDB session storage only; no migration, backup/import implementation, or release authorization.
+
+- Uses the exact shared C-01–C-06 contract in
+  `docs/reviews/m1-session-persistence-review.md` with D-05 version 2. Owner approval
+  and amendments are recorded in `docs/reviews/m1-session-owner-authorization.md`.
+- One authoritative minimal session aggregate in IndexedDB database
+  `unpause-languages`, version 1, store `sessions`, keyed by snapshot session ID.
+- Atomic read/validate/current-occurrence check/write. Acknowledge saving only on
+  transaction completion. Exact retries are durable and idempotent; failed writes
+  preserve the previous state and return typed outcomes without silent fallback.
+- Validate persisted records. Preserve corrupt/future-version records; report them
+  separately from healthy sessions. Missing data is not proof of a first visit.
+  Unsupported databases are never automatically deleted or recreated.
+- Close on versionchange and require reopening. Test closure with a deletion
+  request and retain abort-after-put-success coverage. Defer blocked-upgrade and
+  migration-transition tests until a real upgrade; safe unsupported-version
+  rejection does not claim migration support.
+- Storage adapter tests run on Chromium, Firefox, and WebKit in CI; normal local
+  execution uses Chromium. This does not certify iOS Safari persistence.
+- No accounts, sync, analytics, service worker, or external infrastructure here.
+  Browser transaction completion does not guarantee protection from eviction,
+  clearing, device loss, or origin/profile changes.
+- **Backup/export and import/recovery are the next persistence slice, and a hard
+  prerequisite to any learner pilot.** PWA/device validation, erasure, recovery UI,
+  and actual future migrations require their own approved work before release as
+  applicable. The entire submitted v2 persistence proposal is not silently approved.
+- **Unlocks:** session state/progress and version-1 persistence coverage within A3/A4.
 
 ## D-11: Measurement and privacy
 **Status:** PROPOSED
