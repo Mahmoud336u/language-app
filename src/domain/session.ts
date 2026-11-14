@@ -28,12 +28,11 @@ export function sessionView(record: SessionRecord): SessionView {
   const answered = record.attempts.length;
   const correct = record.attempts.filter(attempt => attempt.result.status === 'correct').length;
   const status = record.discardedAt !== null ? 'discarded' : answered === total ? 'completed' : 'active';
-  return { status,
-    currentOccurrenceId: status === 'active' ? record.snapshot.items[answered]?.occurrenceId ?? null : null,
-    lastActivityAt: record.discardedAt ?? record.attempts.at(-1)?.timestamp ?? record.snapshot.createdAt,
-    progress: { total, answered, correct, incorrect: answered - correct, unanswered: total - answered,
-      accuracy: answered === 0 ? null : correct / answered }
-  };
+  const currentOccurrenceId = status === 'active' ? record.snapshot.items[answered]?.occurrenceId ?? null : null;
+  const lastActivityAt = record.discardedAt ?? record.attempts.at(-1)?.timestamp ?? record.snapshot.createdAt;
+  const progress = { total, answered, correct, incorrect: answered - correct, unanswered: total - answered,
+    accuracy: answered === 0 ? null : correct / answered };
+  return { status, currentOccurrenceId, lastActivityAt, progress };
 }
 
 export function submitSession(record: SessionRecord, command: unknown, clock: Clock): Result<SessionMutation> {
