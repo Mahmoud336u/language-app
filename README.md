@@ -12,10 +12,13 @@ backup/import slice is implemented, reviewed, and passes its approved checks.
 
 ## Roadmap to the MVP
 
-Planning snapshot: **14 November 2026**. M0 closure is merged; M1 has a tested
-answer matcher. The next session save/resume slice is proposed in
-[PR #11](https://github.com/Mahmoud336u/language-app/pull/11). Later milestones
-remain planned. Stages are not percentages or delivery estimates.
+The explorer below preserves the **14 November 2026 planning snapshot** from before
+session implementation. Current status: M0 closure and the matcher are merged;
+[PR #11](https://github.com/Mahmoud336u/language-app/pull/11) approved sessions, and
+[PR #13](https://github.com/Mahmoud336u/language-app/pull/13) implements them with
+quality checks passing and its approved-test-correction merge gate unresolved.
+Backup/import is next. Later milestones remain planned; stages are not percentages
+or delivery estimates. See the [current report](docs/reviews/m1-session-completion-report.md).
 
 ![Unpause Languages roadmap: M0 foundations merged; M1 domain core in progress; M2 content, M3 learning flow, M4 full journey, M5 pilot validation, and the A1 MVP release remain ahead. The selected M1 panel shows approval of the session contract before implementation.](docs/visualizations/mvp-roadmap-preview.png)
 
