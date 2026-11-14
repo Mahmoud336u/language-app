@@ -135,9 +135,16 @@ CI uploads JSON/HTML evidence as the `mutation-report` artifact for 14 days.
 - Tier 2 revisions: **0**.
 - New source/test files and history are retained; no force-push or squash/rebase.
 
-The checker correctly reports one `FROZEN_CHANGE` for the approved correction and
-three `GOVERNANCE_CHANGE` findings for the approved browser CI/configuration setup
-(`.github/workflows/quality.yml`, `package.json`, `playwright.storage.config.ts`).
+Before integrating main, the checker reported one `FROZEN_CHANGE` for the approved
+correction and three `GOVERNANCE_CHANGE` findings for the approved browser
+CI/configuration setup (`.github/workflows/quality.yml`, `package.json`,
+`playwright.storage.config.ts`). Main subsequently merged the README roadmap;
+merge `72489fa` preserves that documentation without changing implementation or
+tests relative to its feature parent. The history checker also reports inherited
+changes at this merge: **two frozen findings for the same approved file correction
+and six governance findings in total**. All eight findings remain visible; the
+merge did not introduce another test edit. The exact source/test/configuration tree
+remains identical to verified `78f5e52`.
 Passing checker-contract tests does not mean this branch passes trusted integrity.
 The [trusted run](https://github.com/Mahmoud336u/language-app/actions/runs/43605954516)
 fails; an ordinary review or `/integrity-approve` cannot clear the frozen finding.

@@ -58,6 +58,15 @@ Exact correction identity:
 - After blob: `cbc38e844126fc816515478e079b2e94f861bd83`.
 - [Reviewable diff](https://github.com/Mahmoud336u/language-app/commit/cc973a5e446e08e2c72a0944f270c24bd8b3773f).
 
+Integrating the newly merged README roadmap from main at
+`72489fab9c58ff2a58b99a56f5a7fda5399548b4` creates a second history-check finding for
+the same corrected blob. The test is unchanged relative to that merge's feature
+parent. Any proposed exception must explicitly account for this inherited finding
+and prove the exact approved blob and unchanged feature-parent content; it must
+not treat an arbitrary merge commit as authorized. Further merges require fresh
+inspection and owner approval bound to the complete current findings, not reuse
+of an old fingerprint.
+
 Other frozen changes, deletions, skips, malformed/stale approvals, and unavailable
 history must still fail closed. The exception must not make PR-local declarations
 trusted, execute PR code in the privileged workflow, or erase original findings.
