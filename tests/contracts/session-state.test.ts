@@ -4,11 +4,17 @@ import fc from 'fast-check';
 import { createSession, discardSession, inspectSession, sessionView, submitSession } from '../../src/domain/session';
 import { oneAnswer, savedCorrect, savedSession, sessionInput, submission, unwrap } from './session-fixtures';
 
+function requiredItem(input: ReturnType<typeof sessionInput>, index = 0) {
+  const item = input.items[index];
+  if (item === undefined) throw new Error('Expected fixture item');
+  return item;
+}
+
 describe('D-05 v2 / D-10 v1 minimal session state', () => {
   it('creates only snapshot, attempts and discard marker with canonical matcher defaults', () => {
     expect(createSession(sessionInput(), () => 100)).toEqual({ ok: true, value: savedSession() });
     const input = sessionInput(); const record = unwrap(createSession(input, () => 100));
-    input.items[0]!.prompt = 'changed'; input.items[0]!.answer.answer = 'changed'; input.items.pop();
+    requiredItem(input).prompt = 'changed'; requiredItem(input).answer.answer = 'changed'; input.items.pop();
     expect(record).toEqual(savedSession());
   });
   it.each([1, 100])('accepts exactly %i occurrences without pedagogical session presets', count => {
@@ -22,15 +28,15 @@ describe('D-05 v2 / D-10 v1 minimal session state', () => {
   });
   it('accepts 128 ASCII ID characters and repeated source content under unique occurrences', () => {
     expect(createSession(sessionInput(3, 'a'.repeat(128)), () => 0).ok).toBe(true);
-    const input = sessionInput(); input.items[1]!.occurrenceId = 'item-1';
+    const input = sessionInput(); requiredItem(input, 1).occurrenceId = 'item-1';
     expect(createSession(input, () => 0).ok).toBe(false);
   });
   it.each(['', ' \t\n', '\ud800', '\u0000', '\u200b', 'x'.repeat(4001)])('rejects malformed prompt %j', prompt => {
-    const input = sessionInput(1); input.items[0]!.prompt = prompt;
+    const input = sessionInput(1); requiredItem(input).prompt = prompt;
     expect(createSession(input, () => 0).ok).toBe(false);
   });
   it.each(['x', 'x'.repeat(4000), '\tTest\r\n😀'])('accepts valid prompt boundary', prompt => {
-    const input = sessionInput(1); input.items[0]!.prompt = prompt;
+    const input = sessionInput(1); requiredItem(input).prompt = prompt;
     expect(createSession(input, () => 0).ok).toBe(true);
   });
   it.each([
@@ -68,7 +74,7 @@ describe('D-05 v2 / D-10 v1 minimal session state', () => {
     expect(Object.keys(final.record).sort()).toEqual(['attempts', 'discardedAt', 'snapshot']);
   });
   it('keeps approved matcher feedback and exact raw answer', () => {
-    const input = sessionInput(1); input.items[0]!.answer.answer = 'schön';
+    const input = sessionInput(1); requiredItem(input).answer.answer = 'schön';
     const record = unwrap(createSession(input, () => 0));
     const result = unwrap(submitSession(record, submission(1, ' SCHOEN '), () => 1));
     expect(result.answerResult).toEqual({ status: 'correct', matchedAnswerIndex: 0, transliterationUsed: true, caseDifference: true });
