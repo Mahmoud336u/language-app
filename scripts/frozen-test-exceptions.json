@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "exceptions": [
+    {
+      "id": "pr-13-mechanical-fixture-access",
+      "repository": "Mahmoud336u/language-app",
+      "pullRequest": 13,
+      "path": "tests/contracts/session-state.test.ts",
+      "correctionCommit": "cc973a5e446e08e2c72a0944f270c24bd8b3773f",
+      "beforeBlob": "6ef64c1f535b0360cf6edb5a6fcd621c245f3f7c",
+      "afterBlob": "cbc38e844126fc816515478e079b2e94f861bd83",
+      "fileMode": "100644",
+      "reason": "Owner-approved replacement of six non-null assertions with the reviewed requiredItem helper; test cases, assertions, expected outcomes, and fixture values remain unchanged."
+    }
+  ]
+}
