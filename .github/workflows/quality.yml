@@ -100,6 +100,8 @@ jobs:
       - run: npm install --global npm@11.9.0
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - if: matrix.check == 'test:e2e'
+        run: npx playwright install --with-deps firefox webkit
       - run: npm run build
       - if: matrix.check == 'test:e2e'
         run: npm run test:e2e
