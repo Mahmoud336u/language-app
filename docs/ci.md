@@ -1,6 +1,6 @@
 # CI and integrity enforcement
 
-Last reviewed: 2026-11-14.
+Last reviewed: 2026-11-15. PR #13 recovery is effective only after its implementation enters trusted main history.
 Repository: `Mahmoud336u/language-app` (public).
 
 ## Account roles and owner-authorized exception
@@ -12,11 +12,11 @@ conversation:
 | --- | --- |
 | Repository ownership, coding, pushing branches, opening normal PRs | @Mahmoud336u |
 | Reviewing and approving normal PRs, merging after requirements pass | @Mahmoud44G |
-| Personally authorizing governance-only integrity findings | @Mahmoud336u |
+| Personally authorizing governance findings and the exact PR #13 correction | @Mahmoud336u |
 
 CODEOWNERS delegates review of protected paths to @Mahmoud44G. It does not
 delegate product-decision approval, linguistic review, protected-test exceptions,
-or the `/integrity-approve` command.
+or the `/integrity-approve` and `/integrity-approve-correction` commands.
 
 The owner chose to retain an admin-capable coding account instead of adopting the
 earlier non-admin coding recommendation. This is an explicit owner-authorized
@@ -70,9 +70,13 @@ The raw checker:
 - Fails closed when history or required inspection data is unavailable.
 - Has no approval or bypass flag.
 
-The separate trusted wrapper can acknowledge only `GOVERNANCE_CHANGE` findings.
-Frozen-test changes, deletions, bypasses, Tier 2 failures, unavailable history, and
-unknown violation codes remain blocking.
+The existing governance-only approval functions acknowledge only
+`GOVERNANCE_CHANGE` findings and still reject frozen changes. A separate recovery
+path can acknowledge only the exact PR #13 correction defined in policy section
+10, using authorization read from the trusted base and a fresh owner comment.
+Every unmatched frozen change, deletion, bypass, Tier 2 failure, unavailable
+history, and unknown violation code remains blocking. Original findings are never
+removed or relabeled.
 
 `npm run check:test-integrity` remains a raw local audit. It still reports
 protected governance changes even when the trusted wrapper has accepted a human
@@ -183,7 +187,54 @@ limits responses to 1 MiB, applies a 15-second request timeout, and reads at mos
 20 pages of 100 comments. A full final page fails closed. PR identity, open state,
 and base/head are checked before and after loading evidence. API errors cannot
 produce success. The job timeout is 10 minutes.
+## Exact PR #13 correction recovery
 
+The policy amendment, authorization record, verifier, runner integration, and new
+tests must land through the separate governance PR first. That PR uses the
+already installed `/integrity-approve` protocol; candidate recovery code cannot
+authorize its own installation. All ordinary checks and independent review apply.
+
+After installation:
+
+1. Merge updated main into PR #13 without rewriting history and push to trigger a
+   fresh workflow event. Rerunning an old workflow does not install new base code.
+2. The runner first applies unchanged governance-only approval logic. Blocked
+   findings may then be evaluated by the separate recovery verifier.
+3. The verifier reads `scripts/frozen-test-exceptions.json` from the exact base
+   commit. It accepts only the authorized repository, PR, file, correction commit,
+   original/corrected blobs, and regular-file mode. Missing authorization grants
+   no exception; malformed or oversized data and unavailable history fail closed.
+4. It checks the correction and current file, every frozen finding, and inherited
+   merge findings. Extra edits remain blocked even after reverts. A qualifying
+   merge retains the approved blob unchanged from its first parent and contains
+   the correction in first-parent ancestry. No arbitrary merge is authorized.
+5. Only when evidence qualifies does the result become
+   `correction-approval-required`. Review the complete current report, then as
+   @Mahmoud336u personally post a new ordinary Conversation comment:
+
+   ```text
+   /integrity-approve-correction <fingerprint from this current run>
+   Reason: <specific reason covering the correction and all protected changes>
+   ```
+
+6. Rerun the check. Accepted recovery reports `owner-approved-correction` and
+   retains the raw findings, authorization record identity, verified Git evidence,
+   and owner comment URL/reason. The raw local audit remains nonzero.
+7. Obtain @Mahmoud44G's required review and ensure all required checks pass before
+   merging with a merge commit. Recovery is unavailable for closed or merged PRs.
+
+The recovery fingerprint includes a separate protocol version, repository, PR,
+owner, exact base/head, complete findings, authorization record, and verified Git
+evidence. Only the latest owner `/integrity-` command counts; wrong, edited, stale,
+or revoked acknowledgments do not authorize recovery. Use a new
+`/integrity-revoke <fingerprint>` comment and rerun to revoke. Completed checks are
+snapshots, so inspect the timeline and current run before merging.
+
+Git reads are object-only with hooks/replacements disabled, time/output limits,
+and a 64 KiB authorization limit. Recovery ancestry inspection is bounded to 2,000
+commits and fails closed on overflow. GitHub access reuses the existing bounded,
+GET-only reader; no new permissions, secrets, or external services are introduced.
+The candidate working tree is never trusted or executed by this workflow.
 ## Logs and artifacts
 
 The trusted workflow:
