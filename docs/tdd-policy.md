@@ -261,7 +261,67 @@ The owner authorized G-01–G-06 from `docs/reviews/m0-architecture-review.md` i
 
 **Initial trust bootstrap.** Current main has no checker or workflow. The owner must review and merge the first foundation PR after actual quality and tamper-suite results. Its candidate checker is not trusted authority over its own installation. The first PR does not have a functioning base-owned `test-integrity` check; after merge the owner makes that check required and verifies a subsequent PR. A separate `integrity-contracts` check exercises candidate enforcement without pretending to be the trusted check.
 
-**Owner-only exceptions.** A rejected protected change requires the exact §4 request (or exact governance change approval), PR/head, affected paths/diff, reason, and owner approval. The raw checker has no approval/bypass flag and continues to report all findings. A separate trusted wrapper may acknowledge governance-only findings using the protocol below. It cannot acknowledge frozen-test changes, deletions, bypasses, Tier 2 failures, unavailable history, or unknown violation codes. Those still require the existing explicit owner procedure. A trailer never authorizes a change.
+**Owner-only exceptions.** A protected change requires the applicable §4 request or governance-change request, the exact affected diff, a reason, and explicit owner approval. The raw integrity checker remains unchanged: it reports every finding and has no approval or bypass flag.
+
+The existing governance-only acknowledgment mechanism remains available for `GOVERNANCE_CHANGE` findings.
+
+A separate trusted recovery mechanism may acknowledge the specific owner-approved mechanical correction in PR #13 described below. This is the only frozen-test correction authorized by this amendment. It does not authorize other test edits, deletions, renames, skipped tests, weakened assertions, changed expected outcomes, or rewritten history.
+
+Chat approval authorizes preparing the approved change. It does not substitute for the authenticated GitHub acknowledgment required before merging.
+### PR #13: exact mechanical correction recovery
+
+**Authorized identity**
+- Repository: Mahmoud336u/language-app
+- Pull request: 13
+- File: tests/contracts/session-state.test.ts
+- Correction commit: cc973a5e446e08e2c72a0944f270c24bd8b3773f
+- Original blob: 6ef64c1f535b0360cf6edb5a6fcd621c245f3f7c
+- Corrected blob: cbc38e844126fc816515478e079b2e94f861bd83
+- Required file mode: regular file 100644
+- Authorized change: replace six non-null assertions with the reviewed requiredItem() helper. No test cases, assertions, expected outcomes, or fixture values change.
+**Trusted authorization record**
+
+These identifiers and the reason must be recorded in scripts/frozen-test-exceptions.json, reviewed and merged separately into main. The recovery mechanism reads this record only from the exact trusted base commit. A record introduced or changed solely within the candidate PR cannot authorize that PR.
+
+The record uses a strict, versioned schema. Unknown fields, duplicate entries, malformed identifiers, or a file larger than 64 KiB cause rejection. This amendment permits only the entry identified above. A missing record grants no exception.
+
+**Verification requirements**
+
+Before considering owner acknowledgment, the trusted mechanism must verify:
+1. The repository and open PR match the authorized identity.
+2. The correction commit is present in the PR’s reachable history, has one parent, and changes the specified regular file from the exact original blob to the exact corrected blob.
+3. The file at the PR head remains the exact corrected blob and mode.
+4. Every frozen-change finding is either the identified correction or an inherited finding at a later merge that contains that correction in its first-parent ancestry. For such a merge, the file must be unchanged from the first parent and must have the exact corrected blob and mode.
+5. All reachable history remains inspected. Any additional unauthorized edit—including one later reverted—remains blocking.
+6. All other findings are eligible GOVERNANCE_CHANGE findings. Deletions, bypasses, Tier 2 failures, unavailable history, unsafe files, and unknown finding codes remain blocking.
+**Authenticated acknowledgment**
+
+Only after all verification requirements succeed may the checker request a new, unedited PR conversation comment personally posted by the owner identified in trusted-base AGENTS.md:
+
+/integrity-approve-correction <fingerprint>
+Reason: <specific explanation covering the correction and all protected changes>
+
+The versioned SHA-256 fingerprint must bind the repository, PR number, owner, exact base and head commits, complete original findings, trusted authorization record, and verified correction/merge evidence.
+
+Only the latest owner /integrity- command counts. Wrong commands, edited comments, stale fingerprints, missing reasons, unavailable evidence, or /integrity-revoke <fingerprint> prevent approval on the next check. PR identity and base/head must be rechecked around evidence retrieval.
+
+Ordinary review badges, commit trailers, candidate files, and agent-written comments cannot authorize recovery. Agents must never post the owner command.
+
+**Reporting and remaining gates**
+
+The report must retain the complete raw findings and identify the authorization record, approval comment URL, reason, and fingerprint. An accepted exception must be reported as owner-approved-correction, never as a clean raw inspection.
+
+All required quality checks and the separate eligible reviewer’s approval remain mandatory. No branch protection is disabled, no check status is forged, and no history is rewritten.
+
+Recovery is unavailable after PR #13 closes or merges. Its authorization record may remain as audit evidence; it grants no authority to another PR.
+
+Completed checks remain snapshots. Revocation is enforced on a subsequent check, so the current approval timeline and check results must be inspected before merging.
+
+```text
+/integrity-approve-correction <fingerprint>
+Reason: <specific explanation covering the correction and all protected changes>
+```
+
 
 **Governance acknowledgment protocol.** The owner from trusted-base `AGENTS.md`
 must personally post a new, unedited PR conversation comment with exactly

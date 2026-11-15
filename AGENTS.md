@@ -37,10 +37,8 @@ The owner authorized all M0 recommendations in the current session on 2026-11-12
 
 Tier 1 protection starts at first commit, including on a feature branch. Shared test support (`tests/setup.ts`, `tests/support/**`, `tests/helpers/**`, `tests/fixtures/**`) is frozen too. Inspect every reachable commit and merge-parent change, not only a final diff. Governance/configuration changes fail closed for owner review. Agent-written approval trailers never waive a failure. Preserve RED history through merge commits; no squash/rebase merges.
 
-The trusted approval wrapper may acknowledge **only** `GOVERNANCE_CHANGE` findings
-through an authenticated, unedited owner PR comment bound to the exact repository,
-PR, base/head, and complete findings fingerprint. See `docs/ci.md`. The raw checker
-remains strict and has no approval flag. Frozen-test, deletion, bypass, Tier 2, and
-history failures cannot be cleared through this path. Agents must never post an
-owner approval command on the owner's behalf. Human review and a check rerun are
-required; an ordinary PR approval badge alone is not an exception.
+The trusted approval wrapper may acknowledge GOVERNANCE_CHANGE findings through the authenticated owner protocol in docs/tdd-policy.md §10. A separate recovery path may acknowledge only the exact PR #13 correction defined there, using a separately merged trusted authorization record and a fresh authenticated owner acknowledgment.
+
+The raw checker remains strict and reports all findings. Every other frozen-test change, deletion, bypass, Tier 2 failure, and history failure remains blocking. Existing governance-only approval functions retain their rejection of frozen-test findings.
+
+Agents must never post owner approval commands, change branch protections, or merge on the owner’s behalf. Required quality checks, independent review, and preserved RED/GREEN history remain mandatory.
