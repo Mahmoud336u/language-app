@@ -268,59 +268,6 @@ The existing governance-only acknowledgment mechanism remains available for `GOV
 A separate trusted recovery mechanism may acknowledge the specific owner-approved mechanical correction in PR #13 described below. This is the only frozen-test correction authorized by this amendment. It does not authorize other test edits, deletions, renames, skipped tests, weakened assertions, changed expected outcomes, or rewritten history.
 
 Chat approval authorizes preparing the approved change. It does not substitute for the authenticated GitHub acknowledgment required before merging.
-
-**Governance acknowledgment protocol.** The owner from trusted-base `AGENTS.md`
-must personally post a new, unedited PR conversation comment with exactly
-`/integrity-approve <fingerprint>` and a nonempty `Reason: ...` on the next line.
-The SHA-256 fingerprint binds version, repository, PR number, owner, base SHA, head
-SHA, and the sorted complete governance findings (code, path, commit). Only the
-latest owner integrity-command comment counts. Wrong, malformed, edited, stale,
-or revoked commands fail closed. `/integrity-revoke <fingerprint>` withdraws the
-acknowledgment on the next run. The wrapper obtains authorship from GitHub, reads
-all bounded comment pages, rechecks current PR/base/head around evidence loading,
-and records the comment ID/URL, reason, fingerprint, and original findings. API
-errors or inspection limits fail closed. Bots and agent-written evidence do not
-authorize exceptions; the coding identity must remain distinct from the owner.
-
-An ordinary PR review approval does not trigger or satisfy this protocol. The
-owner/reviewer reruns the trusted check after the comment. Completed checks are
-snapshots: later edits, deletion, or revocation do not retroactively invalidate
-them. Rerun and inspect the approval timeline before merging; prefer a new revoke
-command over editing/deleting evidence. No status/check-writing permission or
-comment-triggered workflow is introduced.
-
-**Gate installation.** A gate cannot authorize its own installation or upgrade
-using candidate code. The owner may use the existing narrowly scoped administrative
-exception after reviewing the exact PR/head/diff and real quality results; record
-`Test-Change-Approved: PR #<n>` as an audit pointer. Never disable the required check
-globally. The owner controls this exception and merge; an agent must not perform
-them. Ordinary quality gates still have to pass. Verify the new gate on fresh
-events after its code enters the trusted base; old-run reruns retain old code.
-
-**Owner-managed GitHub settings.** Protect main with PRs and required `lint`, `typecheck`, `test:run`, `test:e2e`, `build`, `test-integrity`, plus the approved `integrity-contracts` and `deployment-compatibility` checks. Confirm private-repository plan support. The coding identity must be separate, non-admin, with contents/PR writes only and no bypass/status-forging authority. Bind status sources where supported. CODEOWNERS lists governance and enforcement paths; require reviews only with a separate eligible owner reviewer. Never rely on bot self-approval. See `docs/ci.md` for the manual checklist and limitations.
-
-## 11. Completion report (every milestone)
-
-**Architecture review:** Required / Exempt; review location; verdict; owner authorization; approved design decisions; unresolved risks.
-
-**Implementation summary:** features implemented, files changed, tests added.
-
-**TDD evidence:** RED (failing results before implementation), GREEN (passing results after), REFACTOR (passing results after improvements). Include the commit hashes.
-
-**Verification results** with actual counts and command output: unit, integration, E2E, accessibility, TypeScript, lint, build, each marked passed / failed / unverified. Include mutation-testing results from M1 onward.
-
-**Test integrity:** Tier 1 tests modified without approval (must be 0); tests deleted without approval (0); tests skipped to bypass a failure (0); unauthorized expected-output changes (0); Tier 2 revisions made, each with its decision ID.
-
-**Open items:** PROPOSED decisions still blocking work, unverified checks, and any approval requests awaiting the owner.
-
-Never fabricate a passing result.
-
-## 12. Final directive
-
-Acceptance tests are the contract and production code is the implementation. Never change the contract because the implementation falls short. Do not rewrite tests to turn the pipeline green, remove difficult tests, hide failures, weaken assertions, or silently regenerate snapshots. If a protected test is genuinely wrong, explain why and ask first.
-
-The goal is not green tests. The goal is a correct, reliable, maintainable app whose behavior is independently verified and which actually helps people come back and keep learning.
-
 ### PR #13: exact mechanical correction recovery
 
 **Authorized identity**
@@ -374,3 +321,56 @@ Completed checks remain snapshots. Revocation is enforced on a subsequent check,
 /integrity-approve-correction <fingerprint>
 Reason: <specific explanation covering the correction and all protected changes>
 ```
+
+
+**Governance acknowledgment protocol.** The owner from trusted-base `AGENTS.md`
+must personally post a new, unedited PR conversation comment with exactly
+`/integrity-approve <fingerprint>` and a nonempty `Reason: ...` on the next line.
+The SHA-256 fingerprint binds version, repository, PR number, owner, base SHA, head
+SHA, and the sorted complete governance findings (code, path, commit). Only the
+latest owner integrity-command comment counts. Wrong, malformed, edited, stale,
+or revoked commands fail closed. `/integrity-revoke <fingerprint>` withdraws the
+acknowledgment on the next run. The wrapper obtains authorship from GitHub, reads
+all bounded comment pages, rechecks current PR/base/head around evidence loading,
+and records the comment ID/URL, reason, fingerprint, and original findings. API
+errors or inspection limits fail closed. Bots and agent-written evidence do not
+authorize exceptions; the coding identity must remain distinct from the owner.
+
+An ordinary PR review approval does not trigger or satisfy this protocol. The
+owner/reviewer reruns the trusted check after the comment. Completed checks are
+snapshots: later edits, deletion, or revocation do not retroactively invalidate
+them. Rerun and inspect the approval timeline before merging; prefer a new revoke
+command over editing/deleting evidence. No status/check-writing permission or
+comment-triggered workflow is introduced.
+
+**Gate installation.** A gate cannot authorize its own installation or upgrade
+using candidate code. The owner may use the existing narrowly scoped administrative
+exception after reviewing the exact PR/head/diff and real quality results; record
+`Test-Change-Approved: PR #<n>` as an audit pointer. Never disable the required check
+globally. The owner controls this exception and merge; an agent must not perform
+them. Ordinary quality gates still have to pass. Verify the new gate on fresh
+events after its code enters the trusted base; old-run reruns retain old code.
+
+**Owner-managed GitHub settings.** Protect main with PRs and required `lint`, `typecheck`, `test:run`, `test:e2e`, `build`, `test-integrity`, plus the approved `integrity-contracts` and `deployment-compatibility` checks. Confirm private-repository plan support. The coding identity must be separate, non-admin, with contents/PR writes only and no bypass/status-forging authority. Bind status sources where supported. CODEOWNERS lists governance and enforcement paths; require reviews only with a separate eligible owner reviewer. Never rely on bot self-approval. See `docs/ci.md` for the manual checklist and limitations.
+
+## 11. Completion report (every milestone)
+
+**Architecture review:** Required / Exempt; review location; verdict; owner authorization; approved design decisions; unresolved risks.
+
+**Implementation summary:** features implemented, files changed, tests added.
+
+**TDD evidence:** RED (failing results before implementation), GREEN (passing results after), REFACTOR (passing results after improvements). Include the commit hashes.
+
+**Verification results** with actual counts and command output: unit, integration, E2E, accessibility, TypeScript, lint, build, each marked passed / failed / unverified. Include mutation-testing results from M1 onward.
+
+**Test integrity:** Tier 1 tests modified without approval (must be 0); tests deleted without approval (0); tests skipped to bypass a failure (0); unauthorized expected-output changes (0); Tier 2 revisions made, each with its decision ID.
+
+**Open items:** PROPOSED decisions still blocking work, unverified checks, and any approval requests awaiting the owner.
+
+Never fabricate a passing result.
+
+## 12. Final directive
+
+Acceptance tests are the contract and production code is the implementation. Never change the contract because the implementation falls short. Do not rewrite tests to turn the pipeline green, remove difficult tests, hide failures, weaken assertions, or silently regenerate snapshots. If a protected test is genuinely wrong, explain why and ask first.
+
+The goal is not green tests. The goal is a correct, reliable, maintainable app whose behavior is independently verified and which actually helps people come back and keep learning.
