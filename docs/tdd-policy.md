@@ -263,11 +263,11 @@ The owner authorized G-01–G-06 from `docs/reviews/m0-architecture-review.md` i
 
 **Owner-only exceptions.** A protected change requires the applicable §4 request or governance-change request, the exact affected diff, a reason, and explicit owner approval. The raw integrity checker remains unchanged: it reports every finding and has no approval or bypass flag.
 
-The existing governance-only acknowledgment mechanism remains available for GOVERNANCE_CHANGE findings.
+The existing governance-only acknowledgment mechanism remains available for `GOVERNANCE_CHANGE` findings.
 
 A separate trusted recovery mechanism may acknowledge the specific owner-approved mechanical correction in PR #13 described below. This is the only frozen-test correction authorized by this amendment. It does not authorize other test edits, deletions, renames, skipped tests, weakened assertions, changed expected outcomes, or rewritten history.
 
-Chat approval authorizes preparing the approved change. It does not substitute for the authenticated GitHub acknowledgment required before merging. A rejected protected change requires the exact §4 request (or exact governance change approval), PR/head, affected paths/diff, reason, and owner approval. The raw checker has no approval/bypass flag and continues to report all findings. A separate trusted wrapper may acknowledge governance-only findings using the protocol below. It cannot acknowledge frozen-test changes, deletions, bypasses, Tier 2 failures, unavailable history, or unknown violation codes. Those still require the existing explicit owner procedure.
+Chat approval authorizes preparing the approved change. It does not substitute for the authenticated GitHub acknowledgment required before merging.
 
 **Governance acknowledgment protocol.** The owner from trusted-base `AGENTS.md`
 must personally post a new, unedited PR conversation comment with exactly
